@@ -1,0 +1,8 @@
+#Change Log
+---
+####Format
+#####YYYY-MM-DD HH:mm {comment}
+---
+##Chagnes
+
+2016-02-07 23:27 Added RGB->YCrCb. Need to add more methods to allow me to view Y, Cr & Cb seperately and check that it is all working. YCrCb->RGB is not working. Double check this. Also update the GUI to tab between the different types of the image planes (Y, Cr, Cb).
