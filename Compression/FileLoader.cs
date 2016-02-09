@@ -44,9 +44,9 @@ namespace Compression
                 fileNameBox.Text = openFileDialog.FileName;
                 dataObj.setOriginal(new Bitmap(openFileDialog.FileName)); // sets the original bitmap to the loaded
                 rgbChangeButton.Enabled = true;
-                ShowYButton.Enabled = true;
-                showCbButton.Enabled = true;
-                ShowCrButton.Enabled = true;
+                ShowYButton.Enabled = false;
+                showCbButton.Enabled = false;
+                ShowCrButton.Enabled = false;
             }
         }
 
@@ -62,6 +62,9 @@ namespace Compression
                     dataObj.getRGBtoYCrCb()
                     ));
             //*/
+            ShowYButton.Enabled = true;
+            showCbButton.Enabled = true;
+            ShowCrButton.Enabled = true;
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
         }

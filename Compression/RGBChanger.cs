@@ -17,6 +17,7 @@ namespace Compression
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;
+        Color[,] rgbData, YCbCrData;
         // Do I need to pass in the data object?
 
         /* Image data being passed in */
@@ -36,7 +37,6 @@ namespace Compression
         */
         public Bitmap RGBtoYCbCr(Bitmap orgBmp)
         {
-            //Bitmap bmp = new Bitmap(orgBmp.Width, orgBmp.Height);
             Bitmap bmp = orgBmp;
 
             int width = bmp.Width;
@@ -65,37 +65,26 @@ namespace Compression
                         float green = currentLine[xPor3++];
                         float red = currentLine[xPor3];
 
-                        /*
-                        int luma, cb, cr;
-
-                        luma = (int)(16 + (0.257 * red) + (0.504 * green) + (0.098 * blue));
-                        cb = (int)(128 + (-0.148 * red) + (-0.291 * green) + (0.438 * blue));
-                        cr = (int)(128 + (0.493 * red) + (-0.368 * green) + (-0.071 * blue));
-                        */
-
                         yData[x, y] = (byte)(16 + (0.257 * red) + (0.504 * green) + (0.098 * blue));
                         CbData[x, y] = (byte)(128 + (-0.148 * red) + (-0.291 * green) + (0.438 * blue));
                         CrData[x, y] = (byte)(128 + (0.493 * red) + (-0.368 * green) + (-0.071 * blue));
-
-                        //outBmp.SetPixel(x, y, Color.FromArgb(255, luma, cb, cr));
-                        outBmp.SetPixel(x, y, Color.FromArgb(yData[x,y], CbData[x,y], CrData[x,y]));
                     }
                 }
                 bmp.UnlockBits(bitmapData);
             }
             
+            // subsample
+
             for(int y = 0; y < height; y++)
             {
                 for(int x = 0; x < width; x++)
                 {
-                    // subsample
-                    //outBmp.SetPixel(x, y, Color.FromArgb(255, luma, cb, cr));
                     outBmp.SetPixel(x, y, Color.FromArgb(yData[x, y], CbData[x, y], CrData[x, y]));
                 }
             }
 
             return outBmp;
-        } // I need the arrays of the data Y, Cr, Cb
+        }
 
         public Bitmap YCbCrtoRGB(Bitmap bmp)
         {
@@ -120,23 +109,21 @@ namespace Compression
 
                     r = Math.Max(0, Math.Min(255, r));
                     g = Math.Max(0, Math.Min(255, g));
-                    b = Math.Max(0, Math.Min(255, b));
-
-                    //outBmp.SetPixel(x, y, Color.FromArgb(255, r, g, b));
+                    b = Math.Max(0, Math.Min(255, b));                    
 
                     rData[x, y] = (byte)r;
                     gData[x, y] = (byte)g;
-                    bData[x, y] = (byte)b;
-                    
+                    bData[x, y] = (byte)b;  
                 }
             }
+
+            // subsample
 
             for(int y = 0; y < height; y++)
             {
                 for(int x = 0; x < width; x++)
                 {
-                    // subsample
-                    outBmp.SetPixel(x, y, Color.FromArgb(255, rData[x, y], gData[x, y], bData[x, y]));
+                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x, y], gData[x, y], bData[x, y]));
                 }
             }
 
