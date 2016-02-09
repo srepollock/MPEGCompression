@@ -97,18 +97,9 @@ namespace Compression
             {
                 for (int x = 0; x < width; x++)
                 {
-                    float r = Math.Max(0.0f, Math.Min(1.0f, (float)((1.164 * (yData[x, y] - 16)) + (0.0 * (CbData[x, y] - 128)) + (1.596 * (CrData[x, y] - 128)))));
-                    float g = Math.Max(0.0f, Math.Min(1.0f, (float)((1.164 * (yData[x, y] - 16)) + (-0.392 * (CbData[x, y] - 128)) + (-0.813 * (CrData[x, y] - 128)))));
-                    float b = Math.Max(0.0f, Math.Min(1.0f, (float)((1.164 * (yData[x, y] - 16)) + (2.017 * (CbData[x, y] - 128)) + (0.0 * (CrData[x, y] - 128)))));
-
-                    rData[x, y] = (byte)(r * 255);
-                    gData[x, y] = (byte)(g * 255);
-                    bData[x, y] = (byte)(b * 255);
-                    /*
                     rData[x, y] = (byte)((1.164 * (yData[x,y] - 16)) + (0.0 * (CbData[x,y] - 128)) + (1.596 * (CrData[x,y] - 128)));
                     gData[x, y] = (byte)((1.164 * (yData[x,y] - 16)) + (-0.392 * (CbData[x,y] - 128)) + (-0.813 * (CrData[x,y] - 128)));
                     bData[x, y] = (byte)((1.164 * (yData[x, y] - 16)) + (2.017 * (CbData[x,y] - 128)) + (0.0 * (CrData[x,y] - 128)));
-                    */
                 }
             }
 
