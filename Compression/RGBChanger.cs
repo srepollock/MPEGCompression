@@ -45,6 +45,8 @@ namespace Compression
             this.CbData = new byte[width, height];                     //Cb
             this.CrData = new byte[width, height];                     //Cr
 
+            Bitmap outBmp = new Bitmap(orgBmp.Width, orgBmp.Height);
+
             unsafe
             {
                 BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, bmp.PixelFormat);
@@ -63,21 +65,32 @@ namespace Compression
                         float green = currentLine[xPor3++];
                         float red = currentLine[xPor3];
 
+                        /*
+                        int luma, cb, cr;
+
+                        luma = (int)(16 + (0.257 * red) + (0.504 * green) + (0.098 * blue));
+                        cb = (int)(128 + (-0.148 * red) + (-0.291 * green) + (0.438 * blue));
+                        cr = (int)(128 + (0.493 * red) + (-0.368 * green) + (-0.071 * blue));
+                        */
+
                         yData[x, y] = (byte)(16 + (0.257 * red) + (0.504 * green) + (0.098 * blue));
                         CbData[x, y] = (byte)(128 + (-0.148 * red) + (-0.291 * green) + (0.438 * blue));
                         CrData[x, y] = (byte)(128 + (0.493 * red) + (-0.368 * green) + (-0.071 * blue));
+
+                        //outBmp.SetPixel(x, y, Color.FromArgb(255, luma, cb, cr));
+                        outBmp.SetPixel(x, y, Color.FromArgb(yData[x,y], CbData[x,y], CrData[x,y]));
                     }
                 }
                 bmp.UnlockBits(bitmapData);
             }
-
-
-            Bitmap outBmp = new Bitmap(orgBmp.Width, orgBmp.Height);
-            for (int y = 0; y < bmp.Height; y++)
+            
+            for(int y = 0; y < height; y++)
             {
-                for (int x = 0; x < bmp.Width; x++)
+                for(int x = 0; x < width; x++)
                 {
-                    outBmp.SetPixel(x, y, Color.FromArgb(yData[x, y], CrData[x, y], CbData[x, y]));
+                    // subsample
+                    //outBmp.SetPixel(x, y, Color.FromArgb(255, luma, cb, cr));
+                    outBmp.SetPixel(x, y, Color.FromArgb(yData[x, y], CbData[x, y], CrData[x, y]));
                 }
             }
 
@@ -93,22 +106,37 @@ namespace Compression
             this.gData = new byte[width, height];
             this.bData = new byte[width, height];
 
+            Bitmap outBmp = new Bitmap(bmp.Width, bmp.Height);
+
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    rData[x, y] = (byte)((1.164 * (yData[x,y] - 16)) + (0.0 * (CbData[x,y] - 128)) + (1.596 * (CrData[x,y] - 128)));
-                    gData[x, y] = (byte)((1.164 * (yData[x,y] - 16)) + (-0.392 * (CbData[x,y] - 128)) + (-0.813 * (CrData[x,y] - 128)));
-                    bData[x, y] = (byte)((1.164 * (yData[x, y] - 16)) + (2.017 * (CbData[x,y] - 128)) + (0.0 * (CrData[x,y] - 128)));
+                    int r, g, b;
+
+                    r = (int)((1.164 * (yData[x,y] - 16)) + (0.0 * (CbData[x,y] - 128)) + (1.596 * (CrData[x,y] - 128)));
+                    g = (int)((1.164 * (yData[x,y] - 16)) + (-0.392 * (CbData[x,y] - 128)) + (-0.813 * (CrData[x,y] - 128)));
+                    b = (int)((1.164 * (yData[x, y] - 16)) + (2.017 * (CbData[x,y] - 128)) + (0.0 * (CrData[x,y] - 128)));
+
+                    r = Math.Max(0, Math.Min(255, r));
+                    g = Math.Max(0, Math.Min(255, g));
+                    b = Math.Max(0, Math.Min(255, b));
+
+                    //outBmp.SetPixel(x, y, Color.FromArgb(255, r, g, b));
+
+                    rData[x, y] = (byte)r;
+                    gData[x, y] = (byte)g;
+                    bData[x, y] = (byte)b;
+                    
                 }
             }
 
-            Bitmap outBmp = new Bitmap(bmp.Width, bmp.Height);
-            for (int y = 0; y < bmp.Height; y++)
+            for(int y = 0; y < height; y++)
             {
-                for (int x = 0; x < bmp.Width; x++)
+                for(int x = 0; x < width; x++)
                 {
-                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x, y], gData[x, y], bData[x, y]));
+                    // subsample
+                    outBmp.SetPixel(x, y, Color.FromArgb(255, rData[x, y], gData[x, y], bData[x, y]));
                 }
             }
 
