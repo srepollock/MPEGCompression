@@ -52,7 +52,6 @@ namespace Compression
 
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Converting Image");
             dataObj.setRGBtoYCrCb(
                 dataChanger.RGBtoYCbCr(
                     dataObj.getOriginal()
