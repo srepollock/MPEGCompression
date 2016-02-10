@@ -41,6 +41,7 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showYCbCrButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -97,6 +98,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.showYCbCrButton);
             this.panel1.Controls.Add(this.showCbButton);
             this.panel1.Controls.Add(this.ShowCrButton);
             this.panel1.Controls.Add(this.ShowYButton);
@@ -110,7 +112,7 @@
             // 
             // showCbButton
             // 
-            this.showCbButton.Location = new System.Drawing.Point(676, 318);
+            this.showCbButton.Location = new System.Drawing.Point(675, 276);
             this.showCbButton.Name = "showCbButton";
             this.showCbButton.Size = new System.Drawing.Size(174, 58);
             this.showCbButton.TabIndex = 4;
@@ -120,7 +122,7 @@
             // 
             // ShowCrButton
             // 
-            this.ShowCrButton.Location = new System.Drawing.Point(676, 220);
+            this.ShowCrButton.Location = new System.Drawing.Point(675, 178);
             this.ShowCrButton.Name = "ShowCrButton";
             this.ShowCrButton.Size = new System.Drawing.Size(174, 58);
             this.ShowCrButton.TabIndex = 3;
@@ -130,7 +132,7 @@
             // 
             // ShowYButton
             // 
-            this.ShowYButton.Location = new System.Drawing.Point(676, 128);
+            this.ShowYButton.Location = new System.Drawing.Point(675, 86);
             this.ShowYButton.Name = "ShowYButton";
             this.ShowYButton.Size = new System.Drawing.Size(174, 58);
             this.ShowYButton.TabIndex = 2;
@@ -182,6 +184,16 @@
             this.loadToolStripMenuItem.Text = "&Load";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
+            // showYCbCrButton
+            // 
+            this.showYCbCrButton.Location = new System.Drawing.Point(675, 371);
+            this.showYCbCrButton.Name = "showYCbCrButton";
+            this.showYCbCrButton.Size = new System.Drawing.Size(174, 58);
+            this.showYCbCrButton.TabIndex = 5;
+            this.showYCbCrButton.Text = "Show YCbCr";
+            this.showYCbCrButton.UseVisualStyleBackColor = true;
+            this.showYCbCrButton.Click += new System.EventHandler(this.showYCbCrButton_Click);
+            // 
             // FileLoader
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
@@ -220,6 +232,7 @@
         private System.Windows.Forms.Button showCbButton;
         private System.Windows.Forms.Button ShowCrButton;
         private System.Windows.Forms.Button ShowYButton;
+        private System.Windows.Forms.Button showYCbCrButton;
     }
 }
 

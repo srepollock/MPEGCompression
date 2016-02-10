@@ -29,12 +29,13 @@ namespace Compression
             ShowYButton.Enabled = false;
             showCbButton.Enabled = false;
             ShowCrButton.Enabled = false;
+            showYCbCrButton.Enabled = false;
         }
 
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "JPG Files|*.jpg|PNG Files|*.png|All Files|*.*";
+            openFileDialog.Filter = "JPG Files|*.jpg|PNG Files|*.png|BMP Files|*.bmp|All Files|*.*";
             DialogResult result = openFileDialog.ShowDialog(); // I want to open this to the child window in the file
             if (result == DialogResult.OK) // checks if the result returned true
             {
@@ -47,6 +48,7 @@ namespace Compression
                 ShowYButton.Enabled = false;
                 showCbButton.Enabled = false;
                 ShowCrButton.Enabled = false;
+                showYCbCrButton.Enabled = false;
             }
         }
 
@@ -65,6 +67,7 @@ namespace Compression
             ShowYButton.Enabled = true;
             showCbButton.Enabled = true;
             ShowCrButton.Enabled = true;
+            showYCbCrButton.Enabled = true;
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
         }
@@ -85,6 +88,13 @@ namespace Compression
         {
             pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox3.Image = dataChanger.getCbBitmap(pictureBox1.Image);
+        }
+
+        private void showYCbCrButton_Click(object sender, EventArgs e)
+        {
+            pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
+            //pictureBox3.Image = dataChanger.getYCbCrBitmap(pictureBox1.Image);
+            pictureBox3.Image = dataObj.getRGBtoYCrCb();
         }
     }
 }
