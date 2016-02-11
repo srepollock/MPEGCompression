@@ -75,11 +75,13 @@ namespace Compression
                 int padW = 8 - modW, 
                     padH = 8 - modH;
                 // pad all 3 channels
+                //spadData();
             }
             else if(modW != 0)
             {
                 // width
                 int padW = 8 - modW;
+                
             }
             else
             {
@@ -108,6 +110,11 @@ namespace Compression
             ShowCrButton.Enabled = true;
             showYCbCrButton.Enabled = true;
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
+        }
+
+        private void padData(byte[,] data, int padxby, int padyby)
+        {
+
         }
 
         private void updateYCrCbDataObject()
