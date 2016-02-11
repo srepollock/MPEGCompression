@@ -284,7 +284,7 @@ namespace Compression
         }
 
         //private byte[,] zigzag(byte[,] data)
-        private byte[,] zigzag()
+        private byte[] zigzag()
         {
             // testing
             byte[,] data = new byte[,]
@@ -298,69 +298,70 @@ namespace Compression
                 {21,34,37,47,50,56,59,61 },
                 {35,36,48,49,57,58,62,63 }
             };
-            byte[,] result = new byte[8, 8];
+            byte[] result = new byte[8 * 8];
 
             int i = 0,
-                j = 0,
                 x = 0,
                 y = 0,
-                d = -1; // -1 for the to-right move, +1 for the bottom-left move
+                d = 0; // -1 for the to-right move, +1 for the bottom-left move
             bool flag = false;
+            bool reverseFlag = false;
 
             do
             {
                 flag = false;
-                if (x >= 8)
-                    break;
-
-                result[i, j] = data[x, y];
-                if(i == 0 && j == 0)
-                    x++;
-                while (x != 0)
+                if (x >= 8 || reverseFlag)
                 {
-                    j++;
-                    x--;
-                    y++;
-                    if (j > 7)
+                    d++;
+                    y = d;
+                    reverseFlag = true;
+                    if(x >= 8)
+                        x--;
+                    result[i] = data[x, y];
+                    while (x != d)
                     {
-                        i++;
-                        j = 0;
-                    }if (i > 7)
-                        break;
-                    result[i, j] = data[x, y];
-                }
-                while (y != 0)
-                {
-                    j++;
-                    if (flag || y == 1)
-                        x++;
-                    else
-                        y+=2;
-                    y--;
-                    if (j > 7)
-                    {
-                        i++;
-                        j = 0;
+                        result[++i] = data[--x, ++y];
                     }
-                    if (i > 7)
-                        break;
-                    result[i, j] = data[x, y];
-                    if (!flag)
-                        flag = true;
-                }
-                x++;
-                y = 0;
-                j++;
-                if (j > 7)
-                {
+                    if(++d > 7) break;
+                    x = d;
+                    result[++i] = data[x, y];
+                    while (y != d)
+                    {
+                        result[++i] = data[++x, --y];
+                    }
                     i++;
-                    j = 0;
                 }
-                if (i > 7)
-                    break;
-            } while (i < 8 && j < 8);
+                else
+                {
+                    result[i] = data[x, y];
+                    if (i == 0)
+                        x++;
+                    while (x != 0)
+                    {
+                        i++;
+                        x--;
+                        y++;
+                        result[i] = data[x, y];
+                    }
+                    while (y != 0)
+                    {
+                        i++;
+                        if (flag || y == 1)
+                            x++;
+                        else
+                            y += 2;
+                        y--;
+                        result[i] = data[x, y];
+                        if (!flag)
+                            flag = true;
+                    }
+                    x++;
+                    y = 0;
+                    i++;
+                }
+            } while (i < 64);
 
-            result[7, 7] = data[7, 7];
+            result[63] = data[7, 7];
 
             return result;
         }
