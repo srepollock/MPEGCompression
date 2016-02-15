@@ -58,6 +58,8 @@ namespace Compression
                 padH = 0,
                 width = orgwidth,
                 height = orgheight;
+            byte[,] tempCb, tempCr;
+            double[,] tempDCb, tempDCr;
             /* This data needs to be saved for the header information */
 
             dataObj.setRGBtoYCrCb(
@@ -75,64 +77,15 @@ namespace Compression
             int modH = orgheight % 8, modW = orgwidth % 8; // array is 1 # less for each
             if(modW != 0 || modH != 0)
             {
-                // both
                 padW = (8 - modW == 8) ? 0 : 8 - modW;
                 padH = (8 - modH == 8) ? 0 : 8 - modH;
                 width = orgwidth + padW;
                 height = orgheight + padH;
-                // pad all 3 channels
-                // padData();
                 dataObj.setyData(padData(dataObj.getyData(), padW, padH));
                 dataObj.setCbData(padData(dataObj.getCbData(), padW, padH));
                 dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
             }
-            /* TESTING
-                // testing 16x8
-                byte[,] testing = { 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8}, 
-                    { 1,2,3,4,5,6,7,8},
-                    { 1,2,3,4,5,6,7,8},
-                    { 1,2,3,4,5,6,7,8},
-                    { 1,2,3,4,5,6,7,8}
-                };
-                // testing
 
-                byte[,] temp;
-                double[,] dtemp;
-                double[,] fdct;
-                byte[,] idct;
-                byte[,] blankage = new byte[16, 8];
-                //
-                //test dct and idct here
-                //double[,] fdct = dctObj.forwardDCT(testing);
-                //byte[,] idct = dctObj.inverseDCTByte(fdct);
-                //
-
-                //test dct and idct here
-                for (int y = 0; y < 8; y += 8)
-                {
-                    for (int x = 0; x < 16; x += 8)
-                    {
-                        temp = generateBlocks(testing, x, y);
-                        dtemp = dctObj.forwardDCT(temp);
-                        idct = dctObj.inverseDCTByte(dtemp);
-                        putback(blankage, idct, x, y);
-                    }
-                }
-            */
-            byte[,] tempCb, tempCr;
-            double[,] tempDCb, tempDCr;
             for (int y = 0; y < height; y += 8)
             {
                 for (int x = 0; x < width; x += 8)
@@ -140,17 +93,24 @@ namespace Compression
                     // Cb
                     tempCb = generateBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
+                    // quantize
+                    quantizeData(tempDCb);
+                    // inverse quantize
+                    inverseQuantizeData(tempDCb);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
                     putback(dataObj.getCbData(), tempCb, x, y);
                     // Cr
                     tempCr = generateBlocks(dataObj.getCrData(), x, y);
                     tempDCr = dctObj.forwardDCT(tempCr);
+                    // quantize
+                    quantizeData(tempDCr);
+                    // inverse quantize
+                    inverseQuantizeData(tempDCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
                     putback(dataObj.getCrData(), tempCr, x, y);
                 }
             }
-
-            // update the RGBChanger data to what we have here
+            // update the RGBChanger data to what we have in the dataObj
             updateRGBChangerYCrCBData();
 
             dataObj.setYCrCbtoRGB(
@@ -259,6 +219,51 @@ namespace Compression
         private void showYCbCrButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getRGBtoYCrCb();
+        }
+
+        // Need the data and the quantizaion table (public from data class)
+        private void quantizeData(double[,] data)
+        {
+            for(int y = 0; y < 8; y++)
+            {
+                for(int x = 0; x < 8; x++)
+                {
+                    data[x, y] = Math.Round(data[x, y] / dataObj.chrominance[x, y]);
+                }
+            }
+        }
+
+        private void inverseQuantizeData(double[,] data)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    data[x, y] = (data[x, y] * dataObj.chrominance[x, y]);
+                }
+            }
+        }
+
+        private void quantizeLuma(byte[,] data)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    data[x, y] = Convert.ToByte(Math.Round((double)(data[x, y] / dataObj.luminance[x, y])));
+                }
+            }
+        }
+
+        private void inverseQuantizeLuma(byte[,] data)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    data[x, y] = Convert.ToByte((data[x, y] * dataObj.luminance[x, y]));
+                }
+            }
         }
     }
 }
