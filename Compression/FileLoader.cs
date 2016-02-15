@@ -95,6 +95,14 @@ namespace Compression
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
                     quantizeData(tempDCb);
+                    // zigzag
+
+                    // rle
+
+                    // unrle
+
+                    // unzigzag
+
                     // inverse quantize
                     inverseQuantizeData(tempDCb);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
@@ -104,6 +112,14 @@ namespace Compression
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
                     quantizeData(tempDCr);
+                    // zigzag
+
+                    // rle
+
+                    // unrle
+
+                    // unzigzag
+
                     // inverse quantize
                     inverseQuantizeData(tempDCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
