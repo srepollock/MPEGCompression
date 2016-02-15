@@ -83,7 +83,6 @@ namespace Compression
                 dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
             }
             // testing 16x8
-            /*
             byte[,] testing = { 
                 { 1,2,3,4,5,6,7,8}, 
                 { 1,2,3,4,5,6,7,8}, 
@@ -102,22 +101,30 @@ namespace Compression
                 { 1,2,3,4,5,6,7,8},
                 { 1,2,3,4,5,6,7,8}
             };
-            */
-            byte[,] testing = {
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8}
-            };
             // testing
 
+            byte[,] temp;
+            double[,] dtemp;
+            double[,] fdct;
+            byte[,] idct;
+            byte[,] blankage = new byte[16, 8];
+            /*
             //test dct and idct here
             double[,] fdct = dctObj.forwardDCT(testing);
             byte[,] idct = dctObj.inverseDCTByte(fdct);
+            */
+
+            //test dct and idct here
+            for (int y = 0; y < 8; y += 8)
+            {
+                for (int x = 0; x < 16; x += 8)
+                {
+                    temp = generateBlocks(testing, x, y);
+                    dtemp = dctObj.forwardDCT(temp);
+                    idct = dctObj.inverseDCTByte(dtemp);
+                    putback(blankage, idct, x, y);
+                }
+            }
 
             dataObj.setYCrCbtoRGB(
                 dataChanger.YCbCrtoRGB(
@@ -187,6 +194,17 @@ namespace Compression
                 }
             }
             return output;
+        }
+
+        private void putback(byte[,] original, byte[,] data, int offsetx, int offsety)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    original[offsetx + x, offsety + y] = data[x, y];
+                }
+            }
         }
 
         private void ShowYButton_Click(object sender, EventArgs e)
