@@ -60,6 +60,11 @@ namespace Compression
                 dataChanger.YCbCrtoRGB(
                     dataObj.getRGBtoYCrCb()
                     ));
+            updateDataObject();
+            // run dct and quantize here. We pass in 8x8's
+                // update offset by incrementing by 8 each time
+            
+
             ShowYButton.Enabled = true;
             showCbButton.Enabled = true;
             ShowCrButton.Enabled = true;
@@ -67,19 +72,31 @@ namespace Compression
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
         }
 
+        private void updateDataObject()
+        {
+            dataObj.setyData(dataChanger.getyData());
+            dataObj.setCbData(dataChanger.getCbData());
+            dataObj.setCrData(dataChanger.getCrData());
+            dataObj.setrData(dataChanger.getrData());
+            dataObj.setgData(dataChanger.getgData());
+            dataObj.setbData(dataChanger.getbData());
+            dataObj.setYCrCbData(dataChanger.getYCrCbData());
+            dataChanger = null;
+        }
+
         private void ShowYButton_Click(object sender, EventArgs e)
         {
-            pictureBox3.Image = dataChanger.getYBitmap(pictureBox1.Image);
+            pictureBox3.Image = dataObj.getYBitmap(pictureBox1.Image);
         }
 
         private void ShowCrButton_Click(object sender, EventArgs e)
         {
-            pictureBox3.Image = dataChanger.getCrBitmap(pictureBox1.Image);
+            pictureBox3.Image = dataObj.getCrBitmap(pictureBox1.Image);
         }
 
         private void showCbButton_Click(object sender, EventArgs e)
         {
-            pictureBox3.Image = dataChanger.getCbBitmap(pictureBox1.Image);
+            pictureBox3.Image = dataObj.getCbBitmap(pictureBox1.Image);
         }
 
         private void showYCbCrButton_Click(object sender, EventArgs e)

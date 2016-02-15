@@ -134,67 +134,7 @@ namespace Compression
             }
 
             return outBmp;
-        }
-
-        public Bitmap getYBitmap(Image org)
-        {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
-            {
-                for (int x = 0; x < org.Width; x++)
-                {
-                    //outBmp.SetPixel(x, y, Color.FromArgb(yData[x,y]/3, yData[x, y] / 3, yData[x, y] / 3));
-                    outBmp.SetPixel(x, y, Color.FromArgb(yData[x, y], yData[x, y], yData[x, y]));
-                }
-            }
-
-            return outBmp;
-        }
-
-        public Bitmap getCrBitmap(Image org)
-        {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
-            {
-                for (int x = 0; x < org.Width; x++)
-                {
-                    //outBmp.SetPixel(x, y, Color.FromArgb(CrData[x, y] / 3, CrData[x, y] / 3, CrData[x, y] / 3));
-                    outBmp.SetPixel(x, y, Color.FromArgb(CrData[x, y], CrData[x, y], CrData[x, y]));
-                }
-            }
-
-            return outBmp;
-        }
-
-        public Bitmap getCbBitmap(Image org)
-        {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
-            {
-                for (int x = 0; x < org.Width; x++)
-                {
-                    //outBmp.SetPixel(x, y, Color.FromArgb(CbData[x, y] / 3, CbData[x, y] / 3, CbData[x, y] / 3));
-                    outBmp.SetPixel(x, y, Color.FromArgb(CbData[x, y], CbData[x, y], CbData[x, y]));
-                }
-            }
-
-            return outBmp;
-        }
-
-        public Bitmap getYCbCrBitmap(Image org)
-        {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
-            {
-                for (int x = 0; x < org.Width; x++)
-                {
-                    //outBmp.SetPixel(x, y, Color.FromArgb(CbData[x, y] / 3, CbData[x, y] / 3, CbData[x, y] / 3));
-                    outBmp.SetPixel(x, y, YCbCrData[x, y]);
-                }
-            }
-
-            return outBmp;
-        }
+        }        
 
         private void subsample(byte[,] org, int height, int width)
         {
@@ -209,5 +149,13 @@ namespace Compression
                 }
             }
         }
+
+        public byte[,] getyData() { return this.yData; }
+        public byte[,] getCbData() { return this.CbData; }
+        public byte[,] getCrData() { return this.CrData; }
+        public byte[,] getrData() { return this.rData; }
+        public byte[,] getgData() { return this.gData; }
+        public byte[,] getbData() { return this.bData; }
+        public Color[,] getYCrCbData() { return this.YCbCrData; }
     }
 }

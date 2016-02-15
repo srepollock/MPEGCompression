@@ -35,14 +35,45 @@ namespace Compression
         }
 
         /*
+            Need the image data here
+        */
+        public double[,] forwardDCT(byte[,] imgData)
+        {
+            double[,] forwardData = new double[8, 8];
+            for(int y = 0; y < 8; y++)
+            {
+                for(int x = 0; x < 8; x++)
+                {
+                    forwardData[x,y] = innerForwardDCT(imgData[x, y], x, y);
+                }
+            }
+            return forwardData;
+        }
+
+        public double[,] inverseDCT(byte[,] dctData)
+        {
+            double[,] inverseData = new double[8, 8];
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    inverseData[x, y] = innerInverseDCT(dctData[x, y], x, y);
+                }
+            }
+            return inverseData;
+        }
+
+        /*
             Use this one
 
             This is going to compression in our 'jpeg' format
 
             Passing in data (data from src[u, v]
             Using (u, v) as the index of the datas {x, y}
+
+            Should get back doubles. We only convert to bytes after quantization
         */
-        public int forward2DDCT(int src, int u, int v)
+        public double innerForwardDCT(byte src, int u, int v)
         {
             double temp = 0;
             for (int i = 0; i < 7; i++)
@@ -54,7 +85,7 @@ namespace Compression
                         * src;
                 }
             }
-            return (int)(temp * ((2 * C(u) * C(v)) / 4));
+            return temp * ((2 * C(u) * C(v)) / 4);
         }
 
         /*
@@ -65,7 +96,7 @@ namespace Compression
             Passing in data (data from created[u, v]
             Using (u, v) as the index of the data {x, y}
         */
-        public int inverse2DDCT(int calc, int u, int v)
+        public double innerInverseDCT(byte calc, int u, int v)
         {
             double temp = 0;
             for (int i = 0; i < 7; i++)
@@ -78,7 +109,7 @@ namespace Compression
                         * calc;
                 }
             }
-            return (int)temp;
+            return temp;
         }
     }
 }
