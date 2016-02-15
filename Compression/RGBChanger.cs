@@ -157,5 +157,9 @@ namespace Compression
         public byte[,] getgData() { return this.gData; }
         public byte[,] getbData() { return this.bData; }
         public Color[,] getYCrCbData() { return this.YCbCrData; }
+
+        public void setyData(byte[,] data) { this.yData = data; }
+        public void setCbData(byte[,] data) { this.CbData = data; }
+        public void setCrData(byte[,] data) { this.CrData = data; }
     }
 }

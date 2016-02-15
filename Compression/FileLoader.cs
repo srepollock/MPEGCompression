@@ -131,7 +131,6 @@ namespace Compression
                     }
                 }
             */
-            byte[,] dundee = new byte[504, 480];
             byte[,] tempCb, tempCr;
             double[,] tempDCb, tempDCr;
             for (int y = 0; y < height; y += 8)
@@ -150,6 +149,9 @@ namespace Compression
                     putback(dataObj.getCrData(), tempCr, x, y);
                 }
             }
+
+            // update the RGBChanger data to what we have here
+            updateRGBChangerYCrCBData();
 
             dataObj.setYCrCbtoRGB(
                 dataChanger.YCbCrtoRGB(
@@ -200,6 +202,13 @@ namespace Compression
             dataObj.setCbData(dataChanger.getCbData());
             dataObj.setCrData(dataChanger.getCrData());
             dataObj.setYCrCbData(dataChanger.getYCrCbData());
+        }
+
+        private void updateRGBChangerYCrCBData()
+        {
+            dataChanger.setyData(dataObj.getyData());
+            dataChanger.setCbData(dataObj.getCbData());
+            dataChanger.setCrData(dataObj.getCrData());
         }
 
         private void updateRGBDataObject()
