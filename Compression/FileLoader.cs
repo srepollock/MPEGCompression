@@ -54,6 +54,8 @@ namespace Compression
         {
             int height = dataObj.getOriginal().Height,
                 width = dataObj.getOriginal().Width;
+            int padW = 0,
+                padH = 0;
             /* This data needs to be saved for the header information */
 
             dataObj.setRGBtoYCrCb(
@@ -69,34 +71,53 @@ namespace Compression
 
             // check if the size is divisible by 8, if not pad
             int modH = height % 8, modW = width % 8; // array is 1 # less for each
-            if(modW != 0 && modH != 0)
+            if(modW != 0 || modH != 0)
             {
                 // both
-                int padW = 8 - modW, 
-                    padH = 8 - modH;
+                padW = (8 - modW == 8) ? 0 : 8 - modW;
+                padH = (8 - modH == 8) ? 0 : 8 - modH;
                 // pad all 3 channels
-                //spadData();
+                // padData();
+                dataObj.setyData(padData(dataObj.getyData(), padW, padH));
+                dataObj.setCbData(padData(dataObj.getCbData(), padW, padH));
+                dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
             }
-            else if(modW != 0)
-            {
-                // width
-                int padW = 8 - modW;
-                
-            }
-            else
-            {
-                // height
-                int padh = 8 - modH;
-            }
+            // testing 16x8
+            /*
+            byte[,] testing = { 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8}, 
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8}
+            };
+            */
+            byte[,] testing = {
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8},
+                { 1,2,3,4,5,6,7,8}
+            };
+            // testing
 
             //test dct and idct here
-            for (int y = 0; y < height; y += 8)
-            {
-                for(int x = 0; x < width; x+= 8)
-                {
-
-                }
-            }
+            double[,] fdct = dctObj.forwardDCT(testing);
+            byte[,] idct = dctObj.inverseDCTByte(fdct);
 
             dataObj.setYCrCbtoRGB(
                 dataChanger.YCbCrtoRGB(
@@ -112,9 +133,33 @@ namespace Compression
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
         }
 
-        private void padData(byte[,] data, int padxby, int padyby)
+        private byte[,] padData(byte[,] data, int padxby, int padyby)
         {
-
+            int width = dataObj.getOriginal().Width, height = dataObj.getOriginal().Height;
+            byte[,] temp = new byte[width + padxby, height + padyby];
+            for (int y = 0; y < height + padyby; y++)
+            {
+                for(int x = 0; x < width + padxby; x++)
+                {
+                    if(x >= width && y >= height)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (x >= width)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (y >= height)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else
+                    {
+                        temp[x, y] = data[x, y];
+                    }
+                }
+            }
+            return temp;
         }
 
         private void updateYCrCbDataObject()

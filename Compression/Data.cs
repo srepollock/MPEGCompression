@@ -35,7 +35,7 @@ namespace Compression
 
         private double[,] forwardDCTData;
 
-        private double[,] inverseDCTData;
+        private byte[,] inverseDCTData;
 
         public Data()
         {
@@ -108,7 +108,9 @@ namespace Compression
         public Bitmap getRGBtoYCrCb() { return this.RGBtoYCrCb; }
         public Bitmap getYCrCbtoRGB() { return this.YCrCbtoRGB; }
         public double[,] getForwardDCTData() { return this.forwardDCTData; }
-        public double[,] getInverseDCTData() { return this.inverseDCTData; }
+        //public double[,] getInverseDCTData() { return this.inverseDCTData; }
+        //testing
+        public byte[,] getInverseDCTData() { return this.inverseDCTData; }
         public byte[,] getyData() { return this.yData; }
         public byte[,] getCbData() { return this.CbData; }
         public byte[,] getCrData() { return this.CrData; }
@@ -124,7 +126,9 @@ namespace Compression
         public void setRGBtoYCrCb(Bitmap bmp) { this.RGBtoYCrCb = bmp; }
         public void setYCrCbtoRGB(Bitmap bmp) { this.YCrCbtoRGB = bmp; }
         public void setForwardDCTData(double[,] data) { this.forwardDCTData = data; }
-        public void setInverseDCTData(double[,] data) { this.inverseDCTData = data; }
+        //public void setInverseDCTData(double[,] data) { this.inverseDCTData = data; }
+        //testing
+        public void setInverseDCTData(byte[,] data) { this.inverseDCTData = data; }
         public void setyData(byte[,] data) { this.yData = data; }
         public void setCbData(byte[,] data) { this.CbData = data; }
         public void setCrData(byte[,] data) { this.CrData = data; }

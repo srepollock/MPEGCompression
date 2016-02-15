@@ -27,7 +27,7 @@ namespace Compression
         {
             if (x == 0)
             {
-                return (Math.Sqrt(2) / 2);
+                return (1 / (Math.Sqrt(2)));
             }
             else { // it is not zero
                 return 1;
@@ -35,19 +35,59 @@ namespace Compression
         }
 
         /*
-            Need the image data here
+            Proper??
         */
         public double[,] forwardDCT(byte[,] imgData)
         {
             double[,] forwardData = new double[8, 8];
-            for(int y = 0; y < 8; y++)
+            double temp = 0;
+            for (int v = 0; v < 8; v++)
             {
-                for(int x = 0; x < 8; x++)
+                for(int u = 0; u < 8; u++)
                 {
-                    forwardData[x,y] = innerForwardDCT(imgData[x, y], x, y);
+                    //forwardData[u,v] = innerForwardDCT(imgData[u, v], u, v);
+                    temp = 0;
+                    for (int j = 0; j < 8; j++)
+                    {
+                        for (int i = 0; i < 8; i++)
+                        {
+                            temp += Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                                * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
+                                * imgData[i,j];
+                        }
+                    }
+                    forwardData[u, v] = temp * ((C(u) * C(v)) / 4);
                 }
             }
             return forwardData;
+        }
+
+        // testing
+        public byte[,] inverseDCTByte(double[,] dctData)
+        {
+            byte[,] inverseData = new byte[8, 8];
+            for (int j = 0; j < 8; j++)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    //inverseData[i, j] = innerInverseDCT(dctData[i, j], i, j);
+                    double temp = 0;
+                    for (int v = 0; v < 8; v++)
+                    {
+                        for (int u = 0; u < 8; u++)
+                        {
+                            temp += ((C(u) * C(v)) / 4)
+                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                                * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
+                                * dctData[u, v];
+                        }
+                    }
+                    if (temp > 255) temp = 255;
+                    if (temp < 0) temp = 0;
+                    inverseData[i, j] = Convert.ToByte(temp);
+                }
+            }
+            return inverseData;
         }
 
         public double[,] inverseDCT(byte[,] dctData)
@@ -81,7 +121,7 @@ namespace Compression
                 for (int j = 0; j < 7; j++)
                 {
                     temp += Math.Cos(((2 * i + 1) * u * Math.PI) / 16) 
-                        * Math.Cos(((2 * i + 1) * v * Math.PI) / 16)
+                        * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
                         * src;
                 }
             }
@@ -110,6 +150,31 @@ namespace Compression
                 }
             }
             return temp;
+        }
+
+        // testing
+        public byte innerInverseDCT(double calc, int u, int v)
+        {
+            double temp = 0;
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    temp += ((2 * C(u) * C(v)) / 4)
+                        * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                        * Math.Cos(((2 * i + 1) * v * Math.PI) / 16)
+                        * calc;
+                }
+            }
+            if(temp > 255)
+            {
+                temp = 255;
+            }
+            if(temp < 0)
+            {
+                temp = 0;
+            }
+            return Convert.ToByte(temp);
         }
     }
 }
