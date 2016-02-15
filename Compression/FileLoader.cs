@@ -52,10 +52,12 @@ namespace Compression
 
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
-            int height = dataObj.getOriginal().Height,
-                width = dataObj.getOriginal().Width;
+            int orgheight = dataObj.getOriginal().Height,
+                orgwidth = dataObj.getOriginal().Width;
             int padW = 0,
-                padH = 0;
+                padH = 0,
+                width = orgwidth,
+                height = orgheight;
             /* This data needs to be saved for the header information */
 
             dataObj.setRGBtoYCrCb(
@@ -70,59 +72,82 @@ namespace Compression
             // generate 8x8 blocks
 
             // check if the size is divisible by 8, if not pad
-            int modH = height % 8, modW = width % 8; // array is 1 # less for each
+            int modH = orgheight % 8, modW = orgwidth % 8; // array is 1 # less for each
             if(modW != 0 || modH != 0)
             {
                 // both
                 padW = (8 - modW == 8) ? 0 : 8 - modW;
                 padH = (8 - modH == 8) ? 0 : 8 - modH;
+                width = orgwidth + padW;
+                height = orgheight + padH;
                 // pad all 3 channels
                 // padData();
                 dataObj.setyData(padData(dataObj.getyData(), padW, padH));
                 dataObj.setCbData(padData(dataObj.getCbData(), padW, padH));
                 dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
             }
-            // testing 16x8
-            byte[,] testing = { 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8}, 
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8},
-                { 1,2,3,4,5,6,7,8}
-            };
-            // testing
+            /* TESTING
+                // testing 16x8
+                byte[,] testing = { 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8}, 
+                    { 1,2,3,4,5,6,7,8},
+                    { 1,2,3,4,5,6,7,8},
+                    { 1,2,3,4,5,6,7,8},
+                    { 1,2,3,4,5,6,7,8}
+                };
+                // testing
 
-            byte[,] temp;
-            double[,] dtemp;
-            double[,] fdct;
-            byte[,] idct;
-            byte[,] blankage = new byte[16, 8];
-            /*
-            //test dct and idct here
-            double[,] fdct = dctObj.forwardDCT(testing);
-            byte[,] idct = dctObj.inverseDCTByte(fdct);
-            */
+                byte[,] temp;
+                double[,] dtemp;
+                double[,] fdct;
+                byte[,] idct;
+                byte[,] blankage = new byte[16, 8];
+                //
+                //test dct and idct here
+                //double[,] fdct = dctObj.forwardDCT(testing);
+                //byte[,] idct = dctObj.inverseDCTByte(fdct);
+                //
 
-            //test dct and idct here
-            for (int y = 0; y < 8; y += 8)
-            {
-                for (int x = 0; x < 16; x += 8)
+                //test dct and idct here
+                for (int y = 0; y < 8; y += 8)
                 {
-                    temp = generateBlocks(testing, x, y);
-                    dtemp = dctObj.forwardDCT(temp);
-                    idct = dctObj.inverseDCTByte(dtemp);
-                    putback(blankage, idct, x, y);
+                    for (int x = 0; x < 16; x += 8)
+                    {
+                        temp = generateBlocks(testing, x, y);
+                        dtemp = dctObj.forwardDCT(temp);
+                        idct = dctObj.inverseDCTByte(dtemp);
+                        putback(blankage, idct, x, y);
+                    }
+                }
+            */
+            byte[,] dundee = new byte[504, 480];
+            byte[,] tempCb, tempCr;
+            double[,] tempDCb, tempDCr;
+            for (int y = 0; y < height; y += 8)
+            {
+                for (int x = 0; x < width; x += 8)
+                {
+                    // Cb
+                    tempCb = generateBlocks(dataObj.getCbData(), x, y);
+                    tempDCb = dctObj.forwardDCT(tempCb);
+                    tempCb = dctObj.inverseDCTByte(tempDCb);
+                    putback(dataObj.getCbData(), tempCb, x, y);
+                    // Cr
+                    tempCr = generateBlocks(dataObj.getCrData(), x, y);
+                    tempDCr = dctObj.forwardDCT(tempCr);
+                    tempCr = dctObj.inverseDCTByte(tempDCr);
+                    putback(dataObj.getCrData(), tempCr, x, y);
                 }
             }
 
