@@ -103,7 +103,7 @@ namespace Compression
             {
                 for (int j = 0; j < 7; j++)
                 {
-                    temp += (int)((2 * C(u) * C(v)) / 4) 
+                    temp += ((2 * C(u) * C(v)) / 4) 
                         * Math.Cos(((2 * i + 1) * u * Math.PI) / 16) 
                         * Math.Cos(((2 * i + 1) * v * Math.PI) / 16) 
                         * calc;

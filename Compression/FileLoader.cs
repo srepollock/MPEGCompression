@@ -52,18 +52,56 @@ namespace Compression
 
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
+            int height = dataObj.getOriginal().Height,
+                width = dataObj.getOriginal().Width;
+            /* This data needs to be saved for the header information */
+
             dataObj.setRGBtoYCrCb(
                 dataChanger.RGBtoYCbCr(
                     dataObj.getOriginal()
                     )); // This will set the data changed bitmap to that of the returned bitmap from the data changer
+            updateYCrCbDataObject();
+
+            // This will be run on Cb and Cr data
+            // run dct and quantize here. We pass in 8x8's
+            // update offset by incrementing by 8 each time
+            // generate 8x8 blocks
+
+            // check if the size is divisible by 8, if not pad
+            int modH = height % 8, modW = width % 8; // array is 1 # less for each
+            if(modW != 0 && modH != 0)
+            {
+                // both
+                int padW = 8 - modW, 
+                    padH = 8 - modH;
+                // pad all 3 channels
+            }
+            else if(modW != 0)
+            {
+                // width
+                int padW = 8 - modW;
+            }
+            else
+            {
+                // height
+                int padh = 8 - modH;
+            }
+
+            //test dct and idct here
+            for (int y = 0; y < height; y += 8)
+            {
+                for(int x = 0; x < width; x+= 8)
+                {
+
+                }
+            }
+
             dataObj.setYCrCbtoRGB(
                 dataChanger.YCbCrtoRGB(
                     dataObj.getRGBtoYCrCb()
                     ));
-            updateDataObject();
-            // run dct and quantize here. We pass in 8x8's
-                // update offset by incrementing by 8 each time
-            
+            updateRGBDataObject();
+            dataChanger = new RGBChanger();
 
             ShowYButton.Enabled = true;
             showCbButton.Enabled = true;
@@ -72,16 +110,31 @@ namespace Compression
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
         }
 
-        private void updateDataObject()
+        private void updateYCrCbDataObject()
         {
             dataObj.setyData(dataChanger.getyData());
             dataObj.setCbData(dataChanger.getCbData());
             dataObj.setCrData(dataChanger.getCrData());
+            dataObj.setYCrCbData(dataChanger.getYCrCbData());
+        }
+
+        private void updateRGBDataObject()
+        {
             dataObj.setrData(dataChanger.getrData());
             dataObj.setgData(dataChanger.getgData());
             dataObj.setbData(dataChanger.getbData());
-            dataObj.setYCrCbData(dataChanger.getYCrCbData());
-            dataChanger = null;
+        }
+
+        private byte[,] generateBlocks(byte[,] data, int offsetx, int offsety)
+        {
+            byte[,] output = new byte[8, 8];
+            for (int y = 0; y < 8; y++) {
+                for (int x = 0; x < 8; x++)
+                {
+                    output[x, y] = data[offsetx + x, offsety + y];
+                }
+            }
+            return output;
         }
 
         private void ShowYButton_Click(object sender, EventArgs e)
