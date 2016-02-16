@@ -30,7 +30,25 @@ namespace Compression
             showCbButton.Enabled = false;
             ShowCrButton.Enabled = false;
             showYCbCrButton.Enabled = false;
-            zigzag();
+            /* //zigzag testing
+            double[,] data = new double[,]
+            {
+                {0,1,5,6,14,15,27,28 },
+                {2,4,7,13,16,26,29,42 },
+                {3,8,12,17,25,30,41,43 },
+                {9,11,18,24,31,40,44,53 },
+                {10,19,23,32,39,45,52,54 },
+                {20,22,33,38,46,51,55,60 },
+                {21,34,37,47,50,56,59,61 },
+                {35,36,48,49,57,58,62,63 }
+            };
+            double[,] tempdata;
+            double[] temp;
+            temp = zigzag(data);
+            tempdata = unzigzag(temp);
+            if (tempdata.Length != 0)
+                Console.WriteLine("ok");
+            */
         }
 
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
@@ -61,6 +79,7 @@ namespace Compression
                 height = orgheight;
             byte[,] tempCb, tempCr;
             double[,] tempDCb, tempDCr;
+            double[] zztempB, zztempR;
             /* This data needs to be saved for the header information */
 
             dataObj.setRGBtoYCrCb(
@@ -97,13 +116,13 @@ namespace Compression
                     // quantize
                     quantizeData(tempDCb);
                     // zigzag
-
+                    zztempB = zigzag(tempDCb);
                     // rle
 
                     // unrle
 
                     // unzigzag
-
+                    tempDCb = unzigzag(zztempB);
                     // inverse quantize
                     inverseQuantizeData(tempDCb);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
@@ -114,13 +133,13 @@ namespace Compression
                     // quantize
                     quantizeData(tempDCr);
                     // zigzag
-
+                    zztempR = zigzag(tempDCr);
                     // rle
 
                     // unrle
 
                     // unzigzag
-
+                    tempDCr = unzigzag(zztempR);
                     // inverse quantize
                     inverseQuantizeData(tempDCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
@@ -283,25 +302,10 @@ namespace Compression
             }
         }
 
-<<<<<<< HEAD
-        byte[,] data = new byte[,]
-            {
-                {0,1,5,6,14,15,27,28 },
-                {2,4,7,13,16,26,29,42 },
-                {3,8,12,17,25,30,41,43 },
-                {9,11,18,24,31,40,44,53 },
-                {10,19,23,32,39,45,52,54 },
-                {20,22,33,38,46,51,55,60 },
-                {21,34,37,47,50,56,59,61 },
-                {35,36,48,49,57,58,62,63 }
-            };
-
-=======
-        //private byte[,] zigzag(byte[,] data)
->>>>>>> a130ea554e0ae6079114751e10602ff84aa59dd8
-        private byte[] zigzag()
+        private double[] zigzag(double[,] data)
         {
             // testing
+            /*
             byte[,] data = new byte[,]
             {
                 {0,1,5,6,14,15,27,28 },
@@ -313,7 +317,8 @@ namespace Compression
                 {21,34,37,47,50,56,59,61 },
                 {35,36,48,49,57,58,62,63 }
             };
-            byte[] result = new byte[8 * 8];
+            */
+            double[] result = new double[8 * 8];
 
             int i = 0,
                 x = 0,
@@ -325,13 +330,12 @@ namespace Compression
             do
             {
                 flag = false;
-                if (x >= 8 || reverseFlag)
+                if (x > 7 || reverseFlag)
                 {
                     d++;
                     y = d;
                     reverseFlag = true;
-                    if(x >= 8)
-                        x--;
+                    if(x > 7) x--;
                     result[i] = data[x, y];
                     while (x != d)
                     {
@@ -349,6 +353,79 @@ namespace Compression
                 else
                 {
                     result[i] = data[x, y];
+                    if (i == 0) x++;
+                    while (x != 0)
+                    {
+                        result[++i] = data[--x, ++y];
+                    }
+                    while (y != 0)
+                    {
+                        if (flag || y == 1) x++;
+                        else  y += 2;
+                        result[++i] = data[x, --y];
+                        if (!flag) flag = true;
+                    }
+                    x++; y = 0; i++;
+                }
+            } while (i < 64);
+
+            result[63] = data[7, 7];
+
+            return result;
+        }
+
+        private double[,] unzigzag(double[] data)
+        {
+            // testing
+            /*
+            byte[,] data = new byte[,]
+            {
+                {0,1,5,6,14,15,27,28 },
+                {2,4,7,13,16,26,29,42 },
+                {3,8,12,17,25,30,41,43 },
+                {9,11,18,24,31,40,44,53 },
+                {10,19,23,32,39,45,52,54 },
+                {20,22,33,38,46,51,55,60 },
+                {21,34,37,47,50,56,59,61 },
+                {35,36,48,49,57,58,62,63 }
+            };
+            */
+            double[,] result = new double[8, 8];
+
+            int i = 0,
+                x = 0,
+                y = 0,
+                d = 0; // -1 for the to-right move, +1 for the bottom-left move
+            bool flag = false;
+            bool reverseFlag = false;
+
+            do
+            {
+                flag = false;
+                if (x >= 8 || reverseFlag)
+                {
+                    d++;
+                    y = d;
+                    reverseFlag = true;
+                    if (x >= 8)
+                        x--;
+                    result[x,y] = data[i];
+                    while (x != d)
+                    {
+                        result[--x, ++y] = data[++i];
+                    }
+                    if (++d > 7) break;
+                    x = d;
+                    result[x, y] = data[++i];
+                    while (y != d)
+                    {
+                        result[++x, --y] = data[++i];
+                    }
+                    i++;
+                }
+                else
+                {
+                    result[x, y] = data[i];
                     if (i == 0)
                         x++;
                     while (x != 0)
@@ -356,7 +433,7 @@ namespace Compression
                         i++;
                         x--;
                         y++;
-                        result[i] = data[x, y];
+                        result[x, y] = data[i];
                     }
                     while (y != 0)
                     {
@@ -366,7 +443,7 @@ namespace Compression
                         else
                             y += 2;
                         y--;
-                        result[i] = data[x, y];
+                        result[x, y] = data[i];
                         if (!flag)
                             flag = true;
                     }
@@ -376,7 +453,7 @@ namespace Compression
                 }
             } while (i < 64);
 
-            result[63] = data[7, 7];
+            result[7, 7] = data[63];
 
             return result;
         }
