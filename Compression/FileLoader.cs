@@ -30,6 +30,7 @@ namespace Compression
             showCbButton.Enabled = false;
             ShowCrButton.Enabled = false;
             showYCbCrButton.Enabled = false;
+            zigzag();
         }
 
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
@@ -280,6 +281,74 @@ namespace Compression
                     data[x, y] = Convert.ToByte((data[x, y] * dataObj.luminance[x, y]));
                 }
             }
+        }
+
+        //private byte[,] zigzag(byte[,] data)
+        private byte[,] zigzag()
+        {
+            // testing
+            byte[,] data = new byte[,]
+            {
+                {0,1,5,6,14,15,27,28 },
+                {2,4,7,13,16,26,29,42 },
+                {3,8,12,17,25,30,41,43 },
+                {9,11,18,24,31,40,44,53 },
+                {10,19,23,32,39,45,52,54 },
+                {20,22,33,38,46,51,55,60 },
+                {21,34,37,47,50,56,59,61 },
+                {35,36,48,49,57,58,62,63 }
+            };
+            byte[,] result = new byte[8, 8];
+
+            int i = 0,
+                j = 0,
+                x = 0,
+                y = 0,
+                count = 0;
+
+            do
+            {
+                if (x > 7) break;
+                result[i, j] = data[x, y];
+                if(i == 0 && j == 0)
+                    x++;
+                while (x != 0)
+                {
+                    j++;
+                    x--;
+                    y++;
+                    if (j > 7)
+                    {
+                        i++;
+                        j = 0;
+                    }if (i > 7) break;
+                    result[i, j] = data[x, y];
+                }
+                while (y != 0)
+                {
+                    j++;
+                    x++;
+                    y--;
+                    if (j > 7)
+                    {
+                        i++;
+                        j = 0;
+                    }
+                    if (i > 7) break;
+                    result[i, j] = data[x, y];
+                }
+                x++;
+                j++;
+                if (j > 7)
+                {
+                    i++;
+                    j = 0;
+                }if (i > 7) break;
+            } while (i < 8 && j < 8);
+
+            result[7, 7] = data[7, 7];
+
+            return result;
         }
     }
 }
