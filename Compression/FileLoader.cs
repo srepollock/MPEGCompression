@@ -304,11 +304,15 @@ namespace Compression
                 j = 0,
                 x = 0,
                 y = 0,
-                count = 0;
+                d = -1; // -1 for the to-right move, +1 for the bottom-left move
+            bool flag = false;
 
             do
             {
-                if (x > 7) break;
+                flag = false;
+                if (x >= 8)
+                    break;
+
                 result[i, j] = data[x, y];
                 if(i == 0 && j == 0)
                     x++;
@@ -321,29 +325,39 @@ namespace Compression
                     {
                         i++;
                         j = 0;
-                    }if (i > 7) break;
+                    }if (i > 7)
+                        break;
                     result[i, j] = data[x, y];
                 }
                 while (y != 0)
                 {
                     j++;
-                    x++;
+                    if (flag || y == 1)
+                        x++;
+                    else
+                        y+=2;
                     y--;
                     if (j > 7)
                     {
                         i++;
                         j = 0;
                     }
-                    if (i > 7) break;
+                    if (i > 7)
+                        break;
                     result[i, j] = data[x, y];
+                    if (!flag)
+                        flag = true;
                 }
                 x++;
+                y = 0;
                 j++;
                 if (j > 7)
                 {
                     i++;
                     j = 0;
-                }if (i > 7) break;
+                }
+                if (i > 7)
+                    break;
             } while (i < 8 && j < 8);
 
             result[7, 7] = data[7, 7];
