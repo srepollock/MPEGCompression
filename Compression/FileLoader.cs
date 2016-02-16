@@ -283,6 +283,7 @@ namespace Compression
             }
         }
 
+<<<<<<< HEAD
         byte[,] data = new byte[,]
             {
                 {0,1,5,6,14,15,27,28 },
@@ -295,6 +296,9 @@ namespace Compression
                 {35,36,48,49,57,58,62,63 }
             };
 
+=======
+        //private byte[,] zigzag(byte[,] data)
+>>>>>>> a130ea554e0ae6079114751e10602ff84aa59dd8
         private byte[] zigzag()
         {
             // testing
