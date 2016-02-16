@@ -333,6 +333,17 @@ namespace Compression
             }
         }
 
+        private void putbacks(sbyte[,] original, sbyte[,] data, int offsetx, int offsety)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    original[offsetx + x, offsety + y] = data[x, y];
+                }
+            }
+        }
+
         private void ShowYButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getYBitmap(pictureBox1.Image);
@@ -599,6 +610,9 @@ namespace Compression
             dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCbData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCrData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setsyData(new sbyte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setsCbData(new sbyte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setsCrData(new sbyte[dataObj.paddedWidth, dataObj.paddedHeight]);
             readData(re, dataObj.gHead, dataObj.finalData);
             // split the data
             splitFinalData();
@@ -619,8 +633,8 @@ namespace Compression
                     stempY = unzigzag(tempY);
                     // inverse quantize
                     tempDY = inverseQuantizeLuma(stempY);
-                    btempY = dctObj.inverseDCTByte(tempDY);
-                    putback(dataObj.getyData(), btempY, x, y);
+                    stempY = dctObj.sinverseDCTByte(tempDY);
+                    putbacks(dataObj.getsyData(), stempY, x, y);
 
                     // Cb
                     // block
@@ -629,8 +643,8 @@ namespace Compression
                     stempCb = unzigzag(tempCb);
                     // inverse quantize
                     tempDCb = inverseQuantizeData(stempCb);
-                    btempCb = dctObj.inverseDCTByte(tempDCb);
-                    putback(dataObj.getCbData(), btempCb, x, y);
+                    stempCb = dctObj.sinverseDCTByte(tempDCb);
+                    putbacks(dataObj.getsCbData(), stempCb, x, y);
 
                     // Cr
                     // block
@@ -639,8 +653,8 @@ namespace Compression
                     stempCr = unzigzag(tempCr);
                     // inverse quantize
                     tempDCr = inverseQuantizeData(stempCr);
-                    btempCr = dctObj.inverseDCTByte(tempDCr);
-                    putback(dataObj.getCrData(), btempCr, x, y);
+                    stempCr = dctObj.sinverseDCTByte(tempDCr);
+                    putbacks(dataObj.getsCrData(), stempCr, x, y);
                 }
             }
             re.Close();
@@ -648,7 +662,7 @@ namespace Compression
             updateRGBChangerYCrCBData();
 
             dataObj.setYCrCbtoRGB(
-                dataChanger.YCbCrtoRGB(
+                dataChanger.sYCbCrtoRGB(
                     dataObj.getRGBtoYCrCb()
                     ));
             updateRGBDataObject();

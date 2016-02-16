@@ -28,6 +28,9 @@ namespace Compression
         byte[,] yData;
         byte[,] CbData;
         byte[,] CrData;
+        sbyte[,] syData;
+        sbyte[,] sCbData;
+        sbyte[,] sCrData;
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;
@@ -149,6 +152,9 @@ namespace Compression
         public byte[,] getyData() { return this.yData; }
         public byte[,] getCbData() { return this.CbData; }
         public byte[,] getCrData() { return this.CrData; }
+        public sbyte[,] getsyData() { return this.syData; }
+        public sbyte[,] getsCbData() { return this.sCbData; }
+        public sbyte[,] getsCrData() { return this.sCrData; }
         public byte[,] getrData() { return this.rData; }
         public byte[,] getgData() { return this.gData; }
         public byte[,] getbData() { return this.bData; }
@@ -167,6 +173,9 @@ namespace Compression
         public void setyData(byte[,] data) { this.yData = data; }
         public void setCbData(byte[,] data) { this.CbData = data; }
         public void setCrData(byte[,] data) { this.CrData = data; }
+        public void setsyData(sbyte[,] data) { this.syData = data; }
+        public void setsCbData(sbyte[,] data) { this.sCbData = data; }
+        public void setsCrData(sbyte[,] data) { this.sCrData = data; }
         public void setrData(byte[,] data) { this.rData = data; }
         public void setgData(byte[,] data) { this.gData = data; }
         public void setbData(byte[,] data) { this.bData = data; }

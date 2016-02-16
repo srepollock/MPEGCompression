@@ -14,6 +14,9 @@ namespace Compression
         byte[,] yData;
         byte[,] CbData;
         byte[,] CrData;
+        sbyte[,] srData;
+        sbyte[,] sgData;
+        sbyte[,] sbData;
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;
@@ -75,6 +78,8 @@ namespace Compression
                 bmp.UnlockBits(bitmapData);
             }
 
+
+
             // I can use this image returned information's pixels to play around with
 
             subsample(CbData, height, width);
@@ -134,7 +139,55 @@ namespace Compression
             }
 
             return outBmp;
-        }        
+        }
+
+        public Bitmap sYCbCrtoRGB(Bitmap bmp)
+        {
+
+            int width = bmp.Width;
+            int height = bmp.Height;
+            this.srData = new sbyte[width, height];
+            this.sgData = new sbyte[width, height];
+            this.sbData = new sbyte[width, height];
+
+            Bitmap outBmp = new Bitmap(bmp.Width, bmp.Height);
+
+            // Can't use the height and width of original. Needs to be the sub sampled size
+            // need to handle doubling up the information
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int r, g, b;
+
+                    r = (int)((1.164 * (yData[x, y] - 16)) + (0.0 * (CbData[x, y] - 128)) + (1.596 * (CrData[x, y] - 128)));
+                    g = (int)((1.164 * (yData[x, y] - 16)) + (-0.392 * (CbData[x, y] - 128)) + (-0.813 * (CrData[x, y] - 128)));
+                    b = (int)((1.164 * (yData[x, y] - 16)) + (2.017 * (CbData[x, y] - 128)) + (0.0 * (CrData[x, y] - 128)));
+
+                    r = Math.Max(-128, Math.Min(127, r));
+                    g = Math.Max(-128, Math.Min(127, g));
+                    b = Math.Max(-128, Math.Min(127, b));
+
+                    srData[x, y] = (sbyte)r;
+                    sgData[x, y] = (sbyte)g;
+                    sbData[x, y] = (sbyte)b;
+                }
+            }
+
+            rData = (byte[,])(Array)srData;
+            gData = (byte[,])(Array)sgData;
+            bData = (byte[,])(Array)sbData;
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x, y], gData[x, y], bData[x, y]));
+                }
+            }
+
+            return outBmp;
+        }
 
         private void subsample(byte[,] org, int height, int width)
         {

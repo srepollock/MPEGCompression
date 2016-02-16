@@ -80,8 +80,34 @@ namespace Compression
                         }
                     }
                     if (temp > 255) temp = 255;
-                    if (temp < 0) temp = 0;
+                    if (temp < -0) temp = 0;
                     inverseData[j, i] = Convert.ToByte(temp);
+                }
+            }
+            return inverseData;
+        }
+
+        public sbyte[,] sinverseDCTByte(double[,] dctData)
+        {
+            sbyte[,] inverseData = new sbyte[8, 8];
+            for (int j = 0; j < 8; j++)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    double temp = 0;
+                    for (int v = 0; v < 8; v++)
+                    {
+                        for (int u = 0; u < 8; u++)
+                        {
+                            temp += ((C(u) * C(v)) / 4)
+                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                                * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
+                                * dctData[u, v];
+                        }
+                    }
+                    if (temp > 127) temp = 127;
+                    if (temp < -128) temp = -128;
+                    inverseData[j, i] = Convert.ToSByte(temp);
                 }
             }
             return inverseData;
