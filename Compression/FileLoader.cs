@@ -77,9 +77,9 @@ namespace Compression
                 padH = 0,
                 width = orgwidth,
                 height = orgheight;
-            byte[,] tempCb, tempCr;
-            double[,] tempDCb, tempDCr;
-            double[] zztempB, zztempR;
+            byte[,] tempY, tempCb, tempCr;
+            double[,] tempDY, tempDCb, tempDCr;
+            double[] zztempY, zztempB, zztempR;
             /* This data needs to be saved for the header information */
 
             dataObj.setRGBtoYCrCb(
@@ -110,6 +110,24 @@ namespace Compression
             {
                 for (int x = 0; x < width; x += 8)
                 {
+                    // DCT, Quantize, ZigZag and RLE
+                    // Y
+                    tempY = generateBlocks(dataObj.getyData(), x, y);
+                    tempDY = dctObj.forwardDCT(tempY);
+                    // quantize
+                    quantizeData(tempDY);
+                    // zigzag
+                    zztempY = zigzag(tempDY);
+                    // rle
+
+                    // unrle
+
+                    // unzigzag
+                    tempDY = unzigzag(zztempY);
+                    // inverse quantize
+                    inverseQuantizeData(tempDY);
+                    tempY = dctObj.inverseDCTByte(tempDY);
+                    putback(dataObj.getyData(), tempY, x, y);
                     // Cb
                     tempCb = generateBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
