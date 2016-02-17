@@ -117,6 +117,7 @@ namespace Compression
             dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
 
+            int pos = 0;
             for (int y = 0; y < dataObj.paddedHeight; y += 8)
             {
                 for (int x = 0; x < dataObj.paddedWidth; x += 8)
@@ -133,7 +134,7 @@ namespace Compression
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.yEncoded, sz + 64);
-                    Buffer.BlockCopy(szztempY, 0, dataObj.yEncoded, 0, 64);
+                    Buffer.BlockCopy(szztempY, 0, dataObj.yEncoded, pos, 64);
                     // rle
 
                     // unrle
@@ -155,7 +156,7 @@ namespace Compression
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.cbEncoded, sz + 64);
-                    Buffer.BlockCopy(szztempB, 0, dataObj.cbEncoded, 0, 64);
+                    Buffer.BlockCopy(szztempB, 0, dataObj.cbEncoded, pos, 64);
                     // rle
 
                     // unrle
@@ -177,7 +178,7 @@ namespace Compression
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.crEncoded, sz + 64);
-                    Buffer.BlockCopy(szztempR, 0, dataObj.crEncoded, 0, 64);
+                    Buffer.BlockCopy(szztempR, 0, dataObj.crEncoded, pos, 64);
                     // rle
 
                     // unrle
@@ -188,6 +189,7 @@ namespace Compression
                     tempDCr = inverseQuantizeData(stempCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
                     putback(dataObj.getCrData(), tempCr, x, y);
+                    pos += 64;
                 }
             }
             // update the RGBChanger data to what we have in the dataObj
@@ -211,18 +213,19 @@ namespace Compression
 
         private void setFinalData()
         {
+            int fd = 0;
             dataObj.finalData = new sbyte[dataObj.yEncoded.Length + dataObj.cbEncoded.Length + dataObj.crEncoded.Length];
             for(int i = 0; i < dataObj.yEncoded.Length; i++)
             {
-                dataObj.finalData[i] = dataObj.yEncoded[i];
+                dataObj.finalData[fd++] = dataObj.yEncoded[i];
             }
-            for (int jj = 0, j = dataObj.yEncoded.Length; jj < dataObj.cbEncoded.Length; j++, jj++)
+            for (int jj = 0; jj < dataObj.cbEncoded.Length; jj++)
             {
-                dataObj.finalData[j] = dataObj.yEncoded[jj];
+                dataObj.finalData[fd++] = dataObj.cbEncoded[jj];
             }
-            for (int kk = 0, k = dataObj.yEncoded.Length + dataObj.cbEncoded.Length; kk < dataObj.yEncoded.Length; k++, kk++)
+            for (int kk = 0; kk < dataObj.crEncoded.Length; kk++)
             {
-                dataObj.finalData[k] = dataObj.yEncoded[kk];
+                dataObj.finalData[fd++] = dataObj.crEncoded[kk];
             }
         }
 
@@ -675,7 +678,7 @@ namespace Compression
         private void readData(BinaryReader file, Header head, sbyte[] data)
         {
             int i = 0;
-            while(i < head.getHeight() * head.getWidth())
+            while(i < head.getHeight() * head.getWidth() * 3)
             {
                 data[i++] = file.ReadSByte();
             }
