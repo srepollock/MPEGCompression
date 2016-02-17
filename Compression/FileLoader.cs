@@ -112,6 +112,11 @@ namespace Compression
                 dataObj.setCbData(padData(dataObj.getCbData(), padW, padH));
                 dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
             }
+            else
+            {
+                dataObj.paddedWidth = dataObj.gHead.getWidth();
+                dataObj.paddedHeight = dataObj.gHead.getHeight();
+            }
 
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
@@ -134,7 +139,7 @@ namespace Compression
                     szztempY = zigzag(stempY);
 
                     // put the data into the final array here with an offset of i+=64 for each array
-                    Array.Resize<sbyte>(ref dataObj.yEncoded, sz + 64);
+                    Array.Resize<sbyte>(ref dataObj.yEncoded, sz);
                     Buffer.BlockCopy(szztempY, 0, dataObj.yEncoded, pos, 64);
                     // rle
 
@@ -156,7 +161,7 @@ namespace Compression
                     szztempB = zigzag(stempCb);
 
                     // put the data into the final array here with an offset of i+=64 for each array
-                    Array.Resize<sbyte>(ref dataObj.cbEncoded, sz + 64);
+                    Array.Resize<sbyte>(ref dataObj.cbEncoded, sz);
                     Buffer.BlockCopy(szztempB, 0, dataObj.cbEncoded, pos, 64);
                     // rle
 
@@ -178,7 +183,7 @@ namespace Compression
                     szztempR = zigzag(stempCr);
 
                     // put the data into the final array here with an offset of i+=64 for each array
-                    Array.Resize<sbyte>(ref dataObj.crEncoded, sz + 64);
+                    Array.Resize<sbyte>(ref dataObj.crEncoded, sz);
                     Buffer.BlockCopy(szztempR, 0, dataObj.crEncoded, pos, 64);
                     // rle
 
@@ -317,7 +322,7 @@ namespace Compression
             sbyte[] output = new sbyte[8 * 8];
             for (int i = 0; i < 64; i++)
             {
-                output[i] = data[i + offsetx + offsety];
+                output[i] = data[i + offsetx * offsety];
             }
             return output;
         }
@@ -334,6 +339,17 @@ namespace Compression
         }
 
         private void putbacks(sbyte[,] original, sbyte[,] data, int offsetx, int offsety)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    original[offsetx + x, offsety + y] = data[x, y];
+                }
+            }
+        }
+
+        private void putbackd(double[,] original, double[,] data, int offsetx, int offsety)
         {
             for (int y = 0; y < 8; y++)
             {
@@ -603,6 +619,11 @@ namespace Compression
                 dataObj.paddedWidth = dataObj.gHead.getWidth() + padW;
                 dataObj.paddedHeight = dataObj.gHead.getHeight() + padH;
             }
+            else
+            {
+                dataObj.paddedWidth = dataObj.gHead.getWidth();
+                dataObj.paddedHeight = dataObj.gHead.getHeight();
+            }
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
@@ -610,9 +631,9 @@ namespace Compression
             dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCbData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCrData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setsyData(new sbyte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setsCbData(new sbyte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setsCrData(new sbyte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdyData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdCbData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdCrData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
             readData(re, dataObj.gHead, dataObj.finalData);
             // split the data
             splitFinalData();
@@ -633,8 +654,8 @@ namespace Compression
                     stempY = unzigzag(tempY);
                     // inverse quantize
                     tempDY = inverseQuantizeLuma(stempY);
-                    stempY = dctObj.sinverseDCTByte(tempDY);
-                    putbacks(dataObj.getsyData(), stempY, x, y);
+                    tempDY = dctObj.dinverseDCT(tempDY);
+                    putbackd(dataObj.getdyData(), tempDY, x, y);
 
                     // Cb
                     // block
@@ -643,8 +664,8 @@ namespace Compression
                     stempCb = unzigzag(tempCb);
                     // inverse quantize
                     tempDCb = inverseQuantizeData(stempCb);
-                    stempCb = dctObj.sinverseDCTByte(tempDCb);
-                    putbacks(dataObj.getsCbData(), stempCb, x, y);
+                    tempDCb = dctObj.dinverseDCT(tempDCb);
+                    putbackd(dataObj.getdCbData(), tempDCb, x, y);
 
                     // Cr
                     // block
@@ -653,8 +674,8 @@ namespace Compression
                     stempCr = unzigzag(tempCr);
                     // inverse quantize
                     tempDCr = inverseQuantizeData(stempCr);
-                    stempCr = dctObj.sinverseDCTByte(tempDCr);
-                    putbacks(dataObj.getsCrData(), stempCr, x, y);
+                    tempDCr = dctObj.dinverseDCT(tempDCr);
+                    putbackd(dataObj.getdCrData(), tempDCr, x, y);
                 }
             }
             re.Close();
@@ -663,7 +684,7 @@ namespace Compression
 
             dataObj.setYCrCbtoRGB(
                 dataChanger.sYCbCrtoRGB(
-                    dataObj.getRGBtoYCrCb()
+                    dataObj.getRGBtoYCrCb(), dataObj
                     ));
             updateRGBDataObject();
             dataChanger = new RGBChanger();

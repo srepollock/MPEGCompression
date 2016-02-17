@@ -68,9 +68,9 @@ namespace Compression
                         float green = currentLine[xPor3++];
                         float red = currentLine[xPor3];
 
-                        yData[x, y] = (byte)(16 + (0.257 * red) + (0.504 * green) + (0.098 * blue));
-                        CbData[x, y] = (byte)(128 + (-0.148 * red) + (-0.291 * green) + (0.438 * blue));
-                        CrData[x, y] = (byte)(128 + (0.493 * red) + (-0.368 * green) + (-0.071 * blue));
+                        yData[x, y] = (byte)(0 + (0.299 * red) + (0.587 * green) + (0.114 * blue));
+                        CbData[x, y] = (byte)(128 - (0.168 * red) - (0.331264 * green) + (0.5 * blue));
+                        CrData[x, y] = (byte)(128 + (0.5 * red) - (0.418688 * green) - (0.081312 * blue));
 
                         YCbCrData[x, y] = Color.FromArgb(yData[x, y], CbData[x, y], CrData[x, y]);
                     }
@@ -116,9 +116,9 @@ namespace Compression
                 {
                     int r, g, b;
 
-                    r = (int)((1.164 * (yData[x, y] - 16)) + (0.0 * (CbData[x, y] - 128)) + (1.596 * (CrData[x, y] - 128)));
-                    g = (int)((1.164 * (yData[x, y] - 16)) + (-0.392 * (CbData[x, y] - 128)) + (-0.813 * (CrData[x, y] - 128)));
-                    b = (int)((1.164 * (yData[x, y] - 16)) + (2.017 * (CbData[x, y] - 128)) + (0.0 * (CrData[x, y] - 128)));
+                    r = (int)(yData[x, y] + ( 1.402 * ((CrData[x, y] - 128))));
+                    g = (int)(yData[x, y] - (0.34414 * (CbData[x,y] - 128)) - (0.71414 * (CrData[x,y] - 128)));
+                    b = (int)(yData[x,y] + (1.772 * (CbData[x,y] - 128)));
 
                     r = Math.Max(0, Math.Min(255, r));
                     g = Math.Max(0, Math.Min(255, g));
@@ -141,14 +141,14 @@ namespace Compression
             return outBmp;
         }
 
-        public Bitmap sYCbCrtoRGB(Bitmap bmp)
+        public Bitmap sYCbCrtoRGB(Bitmap bmp, Data dataObj)
         {
 
             int width = bmp.Width;
             int height = bmp.Height;
-            this.srData = new sbyte[width, height];
-            this.sgData = new sbyte[width, height];
-            this.sbData = new sbyte[width, height];
+            this.rData = new byte[width, height];
+            this.gData = new byte[width, height];
+            this.bData = new byte[width, height];
 
             Bitmap outBmp = new Bitmap(bmp.Width, bmp.Height);
 
@@ -160,23 +160,19 @@ namespace Compression
                 {
                     int r, g, b;
 
-                    r = (int)((1.164 * (yData[x, y] - 16)) + (0.0 * (CbData[x, y] - 128)) + (1.596 * (CrData[x, y] - 128)));
-                    g = (int)((1.164 * (yData[x, y] - 16)) + (-0.392 * (CbData[x, y] - 128)) + (-0.813 * (CrData[x, y] - 128)));
-                    b = (int)((1.164 * (yData[x, y] - 16)) + (2.017 * (CbData[x, y] - 128)) + (0.0 * (CrData[x, y] - 128)));
+                    r = (int)(dataObj.getdyData()[x, y] + (1.402 * ((dataObj.getdCrData()[x, y] - 128))));
+                    g = (int)(dataObj.getdyData()[x, y] - (0.34414 * (dataObj.getdCbData()[x, y] - 128)) - (0.71414 * (dataObj.getdCrData()[x, y] - 128)));
+                    b = (int)(dataObj.getdyData()[x, y] + (1.772 * (dataObj.getdCbData()[x, y] - 128)));
 
-                    r = Math.Max(-128, Math.Min(127, r));
-                    g = Math.Max(-128, Math.Min(127, g));
-                    b = Math.Max(-128, Math.Min(127, b));
+                    r = Math.Max(0, Math.Min(255, r));
+                    g = Math.Max(0, Math.Min(255, g));
+                    b = Math.Max(0, Math.Min(255, b));
 
-                    srData[x, y] = (sbyte)r;
-                    sgData[x, y] = (sbyte)g;
-                    sbData[x, y] = (sbyte)b;
+                    rData[x, y] = (byte)r;
+                    gData[x, y] = (byte)g;
+                    bData[x, y] = (byte)b;
                 }
             }
-
-            rData = (byte[,])(Array)srData;
-            gData = (byte[,])(Array)sgData;
-            bData = (byte[,])(Array)sbData;
 
             for (int y = 0; y < height; y++)
             {

@@ -50,12 +50,12 @@ namespace Compression
                     {
                         for (int i = 0; i < 8; i++)
                         {
-                            temp += Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
-                                * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
-                                * imgData[i,j];
+                            temp += Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
+                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                                * imgData[j,i];
                         }
                     }
-                    forwardData[v, u] = temp * ((C(u) * C(v)) / 4);
+                    forwardData[v, u] = temp * ((C(v) * C(u)) / 4);
                 }
             }
             return forwardData;
@@ -73,12 +73,13 @@ namespace Compression
                     {
                         for (int u = 0; u < 8; u++)
                         {
-                            temp += ((C(u) * C(v)) / 4)
-                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                            temp += ((C(v) * C(u)))
                                 * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
-                                * dctData[u, v];
+                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                                * dctData[v, u];
                         }
                     }
+                    temp = temp / 4;
                     if (temp > 255) temp = 255;
                     if (temp < -0) temp = 0;
                     inverseData[j, i] = Convert.ToByte(temp);
@@ -87,9 +88,9 @@ namespace Compression
             return inverseData;
         }
 
-        public sbyte[,] sinverseDCTByte(double[,] dctData)
+        public double[,] dinverseDCT(double[,] dctData)
         {
-            sbyte[,] inverseData = new sbyte[8, 8];
+            double[,] inverseData = new double[8, 8];
             for (int j = 0; j < 8; j++)
             {
                 for (int i = 0; i < 8; i++)
@@ -99,15 +100,16 @@ namespace Compression
                     {
                         for (int u = 0; u < 8; u++)
                         {
-                            temp += ((C(u) * C(v)) / 4)
-                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                            temp += ((C(v) * C(u)))
                                 * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
-                                * dctData[u, v];
+                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                                * dctData[v,u];
                         }
                     }
-                    if (temp > 127) temp = 127;
-                    if (temp < -128) temp = -128;
-                    inverseData[j, i] = Convert.ToSByte(temp);
+                    temp = temp / 4;
+                    if (temp > 255) temp = 255;
+                    if (temp < 0) temp = 0;
+                    inverseData[j, i] = temp;
                 }
             }
             return inverseData;
