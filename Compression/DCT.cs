@@ -56,7 +56,7 @@ namespace Compression
                                 * imgData[i,j];
                         }
                     }
-                    forwardData[u, v] = temp * ((C(u) * C(v)) / 4);
+                    forwardData[v, u] = temp * ((C(u) * C(v)) / 4);
                 }
             }
             return forwardData;
@@ -84,7 +84,7 @@ namespace Compression
                     }
                     if (temp > 255) temp = 255;
                     if (temp < 0) temp = 0;
-                    inverseData[i, j] = Convert.ToByte(temp);
+                    inverseData[j, i] = Convert.ToByte(temp);
                 }
             }
             return inverseData;

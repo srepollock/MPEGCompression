@@ -78,8 +78,9 @@ namespace Compression
                 width = orgwidth,
                 height = orgheight;
             byte[,] tempY, tempCb, tempCr;
+            sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
-            byte[] zztempY, zztempB, zztempR;
+            sbyte[] szztempY, szztempB, szztempR;
             /* This data needs to be saved for the header information */
 
             dataObj.setRGBtoYCrCb(
@@ -110,22 +111,22 @@ namespace Compression
             {
                 for (int x = 0; x < width; x += 8)
                 {
-                    // DCT, Quantize, ZigZag and RLE
+                    // (add 128 before)DCT, Quantize, ZigZag and RLE
                     // Y
                     tempY = generateBlocks(dataObj.getyData(), x, y);
                     tempDY = dctObj.forwardDCT(tempY);
                     // quantize
-                    tempY = quantizeData(tempDY);
+                    stempY = quantizeLuma(tempDY);
                     // zigzag
-                    zztempY = zigzag(tempY);
+                    szztempY = zigzag(stempY);
                     // rle
 
                     // unrle
 
                     // unzigzag
-                    tempY = unzigzag(zztempY);
+                    stempY = unzigzag(szztempY);
                     // inverse quantize
-                    inverseQuantizeData(tempDY);
+                    inverseQuantizeLuma(stempY);
                     tempY = dctObj.inverseDCTByte(tempDY);
                     putback(dataObj.getyData(), tempY, x, y);
                     
@@ -133,17 +134,17 @@ namespace Compression
                     tempCb = generateBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
-                    tempCb = quantizeData(tempDCb);
+                    stempCb = quantizeData(tempDCb);
                     // zigzag
-                    zztempB = zigzag(tempCb);
+                    szztempB = zigzag(stempCb);
                     // rle
 
                     // unrle
 
                     // unzigzag
-                    tempCb = unzigzag(zztempB);
+                    stempCb = unzigzag(szztempB);
                     // inverse quantize
-                    inverseQuantizeData(tempDCb);
+                    tempDCb = inverseQuantizeData(stempCb);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
                     putback(dataObj.getCbData(), tempCb, x, y);
                     
@@ -151,17 +152,17 @@ namespace Compression
                     tempCr = generateBlocks(dataObj.getCrData(), x, y);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
-                    tempCr = quantizeData(tempDCr);
+                    stempCr = quantizeData(tempDCr);
                     // zigzag
-                    zztempR = zigzag(tempCr);
+                    szztempR = zigzag(stempCr);
                     // rle
 
                     // unrle
 
                     // unzigzag
-                    tempCr = unzigzag(zztempR);
+                    stempCr = unzigzag(szztempR);
                     // inverse quantize
-                    inverseQuantizeData(tempDCr);
+                    tempDCr = inverseQuantizeData(stempCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
                     putback(dataObj.getCrData(), tempCr, x, y);
                 }
@@ -278,56 +279,59 @@ namespace Compression
         }
 
         // Need the data and the quantizaion table (public from data class)
-        private byte[,] quantizeData(double[,] data)
+        private sbyte[,] quantizeData(double[,] data)
         {
-            byte[,] output = new byte[8,8];
-            for(int x = 0; x < 8; x++)
+            sbyte[,] output = new sbyte[8,8];
+            for(int y = 0; y < 8; y++)
             {
-                for(int y = 0; y < 8; y++)
+                for(int x = 0; x < 8; x++)
                 {
-
-                    output[x, y] = Convert.ToByte(Math.Round(data[x, y] / dataObj.chrominance[x, y]));
+                    output[x, y] = Convert.ToSByte(Math.Round(data[x, y] / dataObj.chrominance[x, y]));
                 }
             }
             return output;
         }
 
-        private byte[,] inverseQuantizeData(double[,] data)
+        private double[,] inverseQuantizeData(sbyte[,] data)
         {
-            byte[,] output = new byte[8, 8];
+            double[,] output = new double[8, 8];
             for (int y = 0; y < 8; y++)
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    output[x, y] = Convert.ToByte((data[x, y] * dataObj.chrominance[x, y]));
+                    output[x, y] = (data[x, y] * dataObj.chrominance[x, y]);
                 }
             }
             return output;
         }
 
-        private void quantizeLuma(byte[,] data)
+        private sbyte[,] quantizeLuma(double[,] data)
         {
+            sbyte[,] output = new sbyte[8, 8];
             for (int y = 0; y < 8; y++)
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    data[x, y] = Convert.ToByte(Math.Round((double)(data[x, y] / dataObj.luminance[x, y])));
+                    output[x, y] = Convert.ToSByte(Math.Round((double)(data[x, y] / dataObj.luminance[x, y])));
                 }
             }
+            return output;
         }
 
-        private void inverseQuantizeLuma(byte[,] data)
+        private double[,] inverseQuantizeLuma(sbyte[,] data)
         {
+            double[,] output = new double[8, 8];
             for (int y = 0; y < 8; y++)
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    data[x, y] = Convert.ToByte((data[x, y] * dataObj.luminance[x, y]));
+                    output[x, y] = data[x, y] * dataObj.luminance[x, y];
                 }
             }
+            return output;
         }
 
-        private byte[] zigzag(byte[,] data)
+        private sbyte[] zigzag(sbyte[,] data)
         {
             // testing
             /*
@@ -343,7 +347,7 @@ namespace Compression
                 {35,36,48,49,57,58,62,63 }
             };
             */
-            byte[] result = new byte[8 * 8];
+            sbyte[] result = new sbyte[8 * 8];
 
             int i = 0,
                 x = 0,
@@ -399,7 +403,7 @@ namespace Compression
             return result;
         }
 
-        private byte[,] unzigzag(byte[] data)
+        private sbyte[,] unzigzag(sbyte[] data)
         {
             // testing
             /*
@@ -415,7 +419,7 @@ namespace Compression
                 {35,36,48,49,57,58,62,63 }
             };
             */
-            byte[,] result = new byte[8, 8];
+            sbyte[,] result = new sbyte[8, 8];
 
             int i = 0,
                 x = 0,
