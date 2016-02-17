@@ -45,7 +45,6 @@ namespace Compression
             {
                 for(int u = 0; u < 8; u++)
                 {
-                    //forwardData[u,v] = innerForwardDCT(imgData[u, v], u, v);
                     temp = 0;
                     for (int j = 0; j < 8; j++)
                     {
@@ -70,7 +69,6 @@ namespace Compression
             {
                 for (int i = 0; i < 8; i++)
                 {
-                    //inverseData[i, j] = innerInverseDCT(dctData[i, j], i, j);
                     double temp = 0;
                     for (int v = 0; v < 8; v++)
                     {

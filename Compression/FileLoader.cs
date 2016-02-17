@@ -232,13 +232,19 @@ namespace Compression
         // fix this
         private void splitFinalData()
         {
-            int i = 0;
-            while(i < 64)
+            int fd = 0;
+            
+            for (int i = 0; i < dataObj.yEncoded.Length; i++)
             {
-                dataObj.yEncoded[i] = dataObj.finalData[i];
-                dataObj.cbEncoded[i] = dataObj.finalData[i + 64];
-                dataObj.crEncoded[i] = dataObj.finalData[i + 128];
-                i++;
+                dataObj.yEncoded[i] = dataObj.finalData[fd++];
+            }
+            for (int jj = 0; jj < dataObj.cbEncoded.Length; jj++)
+            {
+                dataObj.cbEncoded[jj] = dataObj.finalData[fd++];
+            }
+            for (int kk = 0; kk < dataObj.crEncoded.Length; kk++)
+            {
+                dataObj.crEncoded[kk] = dataObj.finalData[fd++];
             }
         }
 
@@ -604,7 +610,7 @@ namespace Compression
             {
                 for (int x = 0; x < dataObj.paddedWidth; x += 8)
                 {
-                    // (add 128 before)DCT, Quantize, ZigZag and RLE
+                    // DCT, Quantize, ZigZag and RLE
                     // Y
                     // block
                     tempY = generateBlocks(dataObj.yEncoded, x, y);
