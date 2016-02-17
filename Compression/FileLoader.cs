@@ -79,7 +79,7 @@ namespace Compression
                 height = orgheight;
             byte[,] tempY, tempCb, tempCr;
             double[,] tempDY, tempDCb, tempDCr;
-            double[] zztempY, zztempB, zztempR;
+            byte[] zztempY, zztempB, zztempR;
             /* This data needs to be saved for the header information */
 
             dataObj.setRGBtoYCrCb(
@@ -115,49 +115,51 @@ namespace Compression
                     tempY = generateBlocks(dataObj.getyData(), x, y);
                     tempDY = dctObj.forwardDCT(tempY);
                     // quantize
-                    quantizeData(tempDY);
+                    tempY = quantizeData(tempDY);
                     // zigzag
-                    zztempY = zigzag(tempDY);
+                    zztempY = zigzag(tempY);
                     // rle
 
                     // unrle
 
                     // unzigzag
-                    tempDY = unzigzag(zztempY);
+                    tempY = unzigzag(zztempY);
                     // inverse quantize
                     inverseQuantizeData(tempDY);
                     tempY = dctObj.inverseDCTByte(tempDY);
                     putback(dataObj.getyData(), tempY, x, y);
+                    
                     // Cb
                     tempCb = generateBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
-                    quantizeData(tempDCb);
+                    tempCb = quantizeData(tempDCb);
                     // zigzag
-                    zztempB = zigzag(tempDCb);
+                    zztempB = zigzag(tempCb);
                     // rle
 
                     // unrle
 
                     // unzigzag
-                    tempDCb = unzigzag(zztempB);
+                    tempCb = unzigzag(zztempB);
                     // inverse quantize
                     inverseQuantizeData(tempDCb);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
                     putback(dataObj.getCbData(), tempCb, x, y);
+                    
                     // Cr
                     tempCr = generateBlocks(dataObj.getCrData(), x, y);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
-                    quantizeData(tempDCr);
+                    tempCr = quantizeData(tempDCr);
                     // zigzag
-                    zztempR = zigzag(tempDCr);
+                    zztempR = zigzag(tempCr);
                     // rle
 
                     // unrle
 
                     // unzigzag
-                    tempDCr = unzigzag(zztempR);
+                    tempCr = unzigzag(zztempR);
                     // inverse quantize
                     inverseQuantizeData(tempDCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
@@ -276,26 +278,30 @@ namespace Compression
         }
 
         // Need the data and the quantizaion table (public from data class)
-        private void quantizeData(double[,] data)
+        private byte[,] quantizeData(double[,] data)
         {
+            byte[,] output = new byte[8,8];
             for(int y = 0; y < 8; y++)
             {
                 for(int x = 0; x < 8; x++)
                 {
-                    data[x, y] = Math.Round(data[x, y] / dataObj.chrominance[x, y]);
+                    output[x, y] = Convert.ToByte(Math.Round(data[x, y] / dataObj.chrominance[x, y]));
                 }
             }
+            return output;
         }
 
-        private void inverseQuantizeData(double[,] data)
+        private byte[,] inverseQuantizeData(double[,] data)
         {
+            byte[,] output = new byte[8, 8];
             for (int y = 0; y < 8; y++)
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    data[x, y] = (data[x, y] * dataObj.chrominance[x, y]);
+                    output[x, y] = Convert.ToByte((data[x, y] * dataObj.chrominance[x, y]));
                 }
             }
+            return output;
         }
 
         private void quantizeLuma(byte[,] data)
@@ -320,7 +326,7 @@ namespace Compression
             }
         }
 
-        private double[] zigzag(double[,] data)
+        private byte[] zigzag(byte[,] data)
         {
             // testing
             /*
@@ -336,7 +342,7 @@ namespace Compression
                 {35,36,48,49,57,58,62,63 }
             };
             */
-            double[] result = new double[8 * 8];
+            byte[] result = new byte[8 * 8];
 
             int i = 0,
                 x = 0,
@@ -392,7 +398,7 @@ namespace Compression
             return result;
         }
 
-        private double[,] unzigzag(double[] data)
+        private byte[,] unzigzag(byte[] data)
         {
             // testing
             /*
@@ -408,7 +414,7 @@ namespace Compression
                 {35,36,48,49,57,58,62,63 }
             };
             */
-            double[,] result = new double[8, 8];
+            byte[,] result = new byte[8, 8];
 
             int i = 0,
                 x = 0,
