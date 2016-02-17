@@ -281,10 +281,11 @@ namespace Compression
         private byte[,] quantizeData(double[,] data)
         {
             byte[,] output = new byte[8,8];
-            for(int y = 0; y < 8; y++)
+            for(int x = 0; x < 8; x++)
             {
-                for(int x = 0; x < 8; x++)
+                for(int y = 0; y < 8; y++)
                 {
+
                     output[x, y] = Convert.ToByte(Math.Round(data[x, y] / dataObj.chrominance[x, y]));
                 }
             }
