@@ -8,26 +8,26 @@ namespace Compression
 {
     public class Header
     {
-        int height, 
-            width;
+        short height, 
+              width;
         byte quality;
         public Header()
         {
 
         }
-        public Header(int h, int w, byte q)
+        public Header(short h, short w, byte q)
         {
             this.height = h;
             this.width = w;
             this.quality = q;
         }
         // Getters
-        public int getHeight() { return this.height; }
-        public int getWidth() { return this.width; }
+        public short getHeight() { return this.height; }
+        public short getWidth() { return this.width; }
         public byte getQuality() { return this.quality; }
         // Setters
-        public void setHeight(int h) { this.height = h; }
-        public void setWidth(int w) { this.width = w; }
+        public void setHeight(short h) { this.height = h; }
+        public void setWidth(short w) { this.width = w; }
         public void setQuality(byte q) { this.quality = q; }
     }
 }

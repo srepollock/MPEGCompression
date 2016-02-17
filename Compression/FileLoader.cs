@@ -41,18 +41,27 @@ namespace Compression
             DialogResult result = openFileDialog.ShowDialog(); // I want to open this to the child window in the file
             if (result == DialogResult.OK) // checks if the result returned true
             {
-                pictureBox1.Image = Image.FromFile(openFileDialog.FileName);
-                fileNameBox.Text = openFileDialog.FileName;
-                dataObj.setOriginal(new Bitmap(openFileDialog.FileName)); // sets the original bitmap to the loaded
+                string ext = Path.GetExtension(openFileDialog.FileName); // includes the period
+                if(ext == ".rippeg")
+                {
+
+                    openFile(openFileDialog.FileName);
+                }
+                else
+                {
+                    pictureBox1.Image = Image.FromFile(openFileDialog.FileName);
+                    fileNameBox.Text = openFileDialog.FileName;
+                    dataObj.setOriginal(new Bitmap(openFileDialog.FileName)); // sets the original bitmap to the loaded
+                    dataObj.gHead.setHeight((short)dataObj.getOriginal().Height);
+                    dataObj.gHead.setWidth((short)dataObj.getOriginal().Width);
+                    dataObj.gHead.setQuality(1);
+                }
                 rgbChangeButton.Enabled = true;
                 ShowYButton.Enabled = false;
                 showCbButton.Enabled = false;
                 ShowCrButton.Enabled = false;
                 showYCbCrButton.Enabled = false;
                 // setup the header
-                dataObj.gHead.setHeight(dataObj.getOriginal().Height);
-                dataObj.gHead.setWidth(dataObj.getOriginal().Width);
-                dataObj.gHead.setQuality(1);
             }
         }
 
@@ -70,7 +79,8 @@ namespace Compression
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
             int padW = 0,
-                padH = 0;
+                padH = 0,
+                sz = 0;
             byte[,] tempY, tempCb, tempCr;
             sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
@@ -111,6 +121,7 @@ namespace Compression
             {
                 for (int x = 0; x < dataObj.paddedWidth; x += 8)
                 {
+                    sz += 64;
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
                     // Y
                     tempY = generateBlocks(dataObj.getyData(), x, y);
@@ -121,7 +132,8 @@ namespace Compression
                     szztempY = zigzag(stempY);
 
                     // put the data into the final array here with an offset of i+=64 for each array
-                    
+                    Array.Resize<sbyte>(ref dataObj.yEncoded, sz + 64);
+                    Buffer.BlockCopy(szztempY, 0, dataObj.yEncoded, 0, 64);
                     // rle
 
                     // unrle
@@ -129,7 +141,7 @@ namespace Compression
                     // unzigzag
                     stempY = unzigzag(szztempY);
                     // inverse quantize
-                    inverseQuantizeLuma(stempY);
+                    tempDY = inverseQuantizeLuma(stempY);
                     tempY = dctObj.inverseDCTByte(tempDY);
                     putback(dataObj.getyData(), tempY, x, y);
                     
@@ -142,7 +154,8 @@ namespace Compression
                     szztempB = zigzag(stempCb);
 
                     // put the data into the final array here with an offset of i+=64 for each array
-
+                    Array.Resize<sbyte>(ref dataObj.cbEncoded, sz + 64);
+                    Buffer.BlockCopy(szztempB, 0, dataObj.cbEncoded, 0, 64);
                     // rle
 
                     // unrle
@@ -163,7 +176,8 @@ namespace Compression
                     szztempR = zigzag(stempCr);
 
                     // put the data into the final array here with an offset of i+=64 for each array
-
+                    Array.Resize<sbyte>(ref dataObj.crEncoded, sz + 64);
+                    Buffer.BlockCopy(szztempR, 0, dataObj.crEncoded, 0, 64);
                     // rle
 
                     // unrle
@@ -178,6 +192,7 @@ namespace Compression
             }
             // update the RGBChanger data to what we have in the dataObj
             updateRGBChangerYCrCBData();
+            setFinalData();
 
             dataObj.setYCrCbtoRGB(
                 dataChanger.YCbCrtoRGB(
@@ -192,6 +207,36 @@ namespace Compression
             showYCbCrButton.Enabled = true;
             saveToolStripMenuItem.Enabled = true;
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
+        }
+
+        private void setFinalData()
+        {
+            dataObj.finalData = new sbyte[dataObj.yEncoded.Length + dataObj.cbEncoded.Length + dataObj.crEncoded.Length];
+            for(int i = 0; i < dataObj.yEncoded.Length; i++)
+            {
+                dataObj.finalData[i] = dataObj.yEncoded[i];
+            }
+            for (int jj = 0, j = dataObj.yEncoded.Length; jj < dataObj.cbEncoded.Length; j++, jj++)
+            {
+                dataObj.finalData[j] = dataObj.yEncoded[jj];
+            }
+            for (int kk = 0, k = dataObj.yEncoded.Length + dataObj.cbEncoded.Length; kk < dataObj.yEncoded.Length; k++, kk++)
+            {
+                dataObj.finalData[k] = dataObj.yEncoded[kk];
+            }
+        }
+
+        // fix this
+        private void splitFinalData()
+        {
+            int i = 0;
+            while(i < 64)
+            {
+                dataObj.yEncoded[i] = dataObj.finalData[i];
+                dataObj.cbEncoded[i] = dataObj.finalData[i + 64];
+                dataObj.crEncoded[i] = dataObj.finalData[i + 128];
+                i++;
+            }
         }
 
         private byte[,] padData(byte[,] data, int padxby, int padyby)
@@ -253,6 +298,16 @@ namespace Compression
                 {
                     output[x, y] = data[offsetx + x, offsety + y];
                 }
+            }
+            return output;
+        }
+
+        private sbyte[] generateBlocks(sbyte[] data, int offsetx, int offsety)
+        {
+            sbyte[] output = new sbyte[8 * 8];
+            for (int i = 0; i < 64; i++)
+            {
+                output[i] = data[i + offsetx + offsety];
             }
             return output;
         }
@@ -505,15 +560,96 @@ namespace Compression
             // setup the header information
             writeData(wr, dataObj.gHead);
             writeData(wr, dataObj.finalData);
+            wr.Close();
+            fs.Close();
         }
 
         public void openFile(string fileName)
         {
             this.Text = fileName; // sets the text of the form to the file name
-            FileStream fs = new FileStream(fileName, FileMode.Create);
-            BinaryReader re = new BinaryReader(fs);
+            BinaryReader re = new BinaryReader(File.OpenRead(fileName));
             // setup the header information
             readData(re, dataObj.gHead);
+            dataObj.setRGBtoYCrCb(new Bitmap(dataObj.gHead.getWidth(), dataObj.gHead.getHeight()));
+            int modH = dataObj.gHead.getHeight() % 8,
+                modW = dataObj.gHead.getWidth() % 8, // array is 1 # less for each
+                padW = 0,
+                padH = 0;
+            if (modW != 0 || modH != 0)
+            {
+                padW = (8 - modW == 8) ? 0 : 8 - modW;
+                padH = (8 - modH == 8) ? 0 : 8 - modH;
+                dataObj.paddedWidth = dataObj.gHead.getWidth() + padW;
+                dataObj.paddedHeight = dataObj.gHead.getHeight() + padH;
+            }
+            dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
+            dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setCbData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setCrData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            readData(re, dataObj.gHead, dataObj.finalData);
+            // split the data
+            splitFinalData();
+
+            sbyte[] tempY, tempCb, tempCr;
+            byte[,] btempY, btempCb, btempCr;
+            sbyte[,] stempY, stempCb, stempCr;
+            double[,] tempDY, tempDCb, tempDCr;
+            for (int y = 0; y < dataObj.paddedHeight; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth; x += 8)
+                {
+                    // (add 128 before)DCT, Quantize, ZigZag and RLE
+                    // Y
+                    // block
+                    tempY = generateBlocks(dataObj.yEncoded, x, y);
+                    // unzigzag
+                    stempY = unzigzag(tempY);
+                    // inverse quantize
+                    tempDY = inverseQuantizeLuma(stempY);
+                    btempY = dctObj.inverseDCTByte(tempDY);
+                    putback(dataObj.getyData(), btempY, x, y);
+
+                    // Cb
+                    // block
+                    tempCb = generateBlocks(dataObj.cbEncoded, x, y);
+                    // unzigzag
+                    stempCb = unzigzag(tempCb);
+                    // inverse quantize
+                    tempDCb = inverseQuantizeData(stempCb);
+                    btempCb = dctObj.inverseDCTByte(tempDCb);
+                    putback(dataObj.getCbData(), btempCb, x, y);
+
+                    // Cr
+                    // block
+                    tempCr = generateBlocks(dataObj.crEncoded, x, y);
+                    // unzigzag
+                    stempCr = unzigzag(tempCr);
+                    // inverse quantize
+                    tempDCr = inverseQuantizeData(stempCr);
+                    btempCr = dctObj.inverseDCTByte(tempDCr);
+                    putback(dataObj.getCrData(), btempCr, x, y);
+                }
+            }
+            re.Close();
+            // set pixels
+            updateRGBChangerYCrCBData();
+
+            dataObj.setYCrCbtoRGB(
+                dataChanger.YCbCrtoRGB(
+                    dataObj.getRGBtoYCrCb()
+                    ));
+            updateRGBDataObject();
+            dataChanger = new RGBChanger();
+
+            ShowYButton.Enabled = true;
+            showCbButton.Enabled = true;
+            ShowCrButton.Enabled = true;
+            showYCbCrButton.Enabled = true;
+            saveToolStripMenuItem.Enabled = true;
+            pictureBox2.Image = dataObj.getYCrCbtoRGB();
         }
 
         private void writeData(BinaryWriter file, Header header)
@@ -525,29 +661,23 @@ namespace Compression
 
         private void writeData(BinaryWriter file, sbyte[] data)
         {
-            for(int i = 0; i < dataObj.paddedHeight * dataObj.paddedWidth; i++)
+            for(int i = 0; i < dataObj.paddedHeight * dataObj.paddedWidth * 3; i++)
                 file.Write(data[i]);
         }
 
         private void readData(BinaryReader file, Header header)
         {
-            header.setHeight(file.ReadInt32());
-            header.setWidth(file.ReadInt32());
+            header.setHeight(file.ReadInt16());
+            header.setWidth(file.ReadInt16());
             header.setQuality(file.ReadByte());
         }
 
         private void readData(BinaryReader file, Header head, sbyte[] data)
         {
             int i = 0;
-            while(true)
+            while(i < head.getHeight() * head.getWidth())
             {
-                try
-                {
-                    data[i++] = file.ReadSByte();
-                }catch(Exception e)
-                {
-                    break;
-                }
+                data[i++] = file.ReadSByte();
             }
         }
     }
