@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,31 +31,13 @@ namespace Compression
             showCbButton.Enabled = false;
             ShowCrButton.Enabled = false;
             showYCbCrButton.Enabled = false;
-            /* //zigzag testing
-            double[,] data = new double[,]
-            {
-                {0,1,5,6,14,15,27,28 },
-                {2,4,7,13,16,26,29,42 },
-                {3,8,12,17,25,30,41,43 },
-                {9,11,18,24,31,40,44,53 },
-                {10,19,23,32,39,45,52,54 },
-                {20,22,33,38,46,51,55,60 },
-                {21,34,37,47,50,56,59,61 },
-                {35,36,48,49,57,58,62,63 }
-            };
-            double[,] tempdata;
-            double[] temp;
-            temp = zigzag(data);
-            tempdata = unzigzag(temp);
-            if (tempdata.Length != 0)
-                Console.WriteLine("ok");
-            */
+            saveToolStripMenuItem.Enabled = false;
         }
 
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "BMP Files|*.bmp|JPG Files|*.jpg|PNG Files|*.png|All Files|*.*";
+            openFileDialog.Filter = "BMP Files|*.bmp|JPG Files|*.jpg|PNG Files|*.png|RIPPEG Files|*.rippeg|All Files|*.*";
             DialogResult result = openFileDialog.ShowDialog(); // I want to open this to the child window in the file
             if (result == DialogResult.OK) // checks if the result returned true
             {
@@ -66,17 +49,28 @@ namespace Compression
                 showCbButton.Enabled = false;
                 ShowCrButton.Enabled = false;
                 showYCbCrButton.Enabled = false;
+                // setup the header
+                dataObj.gHead.setHeight(dataObj.getOriginal().Height);
+                dataObj.gHead.setWidth(dataObj.getOriginal().Width);
+                dataObj.gHead.setQuality(1);
+            }
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "RIPPEG Files|*.rippeg|All Files|*.*";
+            DialogResult result = saveFileDialog.ShowDialog();
+            if(result == DialogResult.OK)
+            {
+                this.saveFile(saveFileDialog.FileName);
             }
         }
 
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
-            int orgheight = dataObj.getOriginal().Height,
-                orgwidth = dataObj.getOriginal().Width;
             int padW = 0,
-                padH = 0,
-                width = orgwidth,
-                height = orgheight;
+                padH = 0;
             byte[,] tempY, tempCb, tempCr;
             sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
@@ -95,21 +89,27 @@ namespace Compression
             // generate 8x8 blocks
 
             // check if the size is divisible by 8, if not pad
-            int modH = orgheight % 8, modW = orgwidth % 8; // array is 1 # less for each
+            int modH = dataObj.gHead.getHeight() % 8, 
+                modW = dataObj.gHead.getWidth() % 8; // array is 1 # less for each
             if(modW != 0 || modH != 0)
             {
                 padW = (8 - modW == 8) ? 0 : 8 - modW;
                 padH = (8 - modH == 8) ? 0 : 8 - modH;
-                width = orgwidth + padW;
-                height = orgheight + padH;
+                dataObj.paddedWidth = dataObj.gHead.getWidth() + padW;
+                dataObj.paddedHeight = dataObj.gHead.getHeight() + padH;
                 dataObj.setyData(padData(dataObj.getyData(), padW, padH));
                 dataObj.setCbData(padData(dataObj.getCbData(), padW, padH));
                 dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
             }
 
-            for (int y = 0; y < height; y += 8)
+            dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
+            dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+
+            for (int y = 0; y < dataObj.paddedHeight; y += 8)
             {
-                for (int x = 0; x < width; x += 8)
+                for (int x = 0; x < dataObj.paddedWidth; x += 8)
                 {
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
                     // Y
@@ -119,6 +119,9 @@ namespace Compression
                     stempY = quantizeLuma(tempDY);
                     // zigzag
                     szztempY = zigzag(stempY);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+                    
                     // rle
 
                     // unrle
@@ -137,6 +140,9 @@ namespace Compression
                     stempCb = quantizeData(tempDCb);
                     // zigzag
                     szztempB = zigzag(stempCb);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+
                     // rle
 
                     // unrle
@@ -155,6 +161,9 @@ namespace Compression
                     stempCr = quantizeData(tempDCr);
                     // zigzag
                     szztempR = zigzag(stempCr);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+
                     // rle
 
                     // unrle
@@ -181,6 +190,7 @@ namespace Compression
             showCbButton.Enabled = true;
             ShowCrButton.Enabled = true;
             showYCbCrButton.Enabled = true;
+            saveToolStripMenuItem.Enabled = true;
             pictureBox2.Image = dataObj.getYCrCbtoRGB();
         }
 
@@ -278,7 +288,6 @@ namespace Compression
             pictureBox3.Image = dataObj.getRGBtoYCrCb();
         }
 
-        // Need the data and the quantizaion table (public from data class)
         private sbyte[,] quantizeData(double[,] data)
         {
             sbyte[,] output = new sbyte[8,8];
@@ -485,6 +494,61 @@ namespace Compression
             result[7, 7] = data[63];
 
             return result;
+        }
+
+        public void saveFile(string fileName)
+        {
+            if (pictureBox2.Image == null) return;
+            this.Text = fileName; // sets the text of the form to the file name
+            FileStream fs = new FileStream(fileName, FileMode.Create);
+            BinaryWriter wr = new BinaryWriter(fs);
+            // setup the header information
+            writeData(wr, dataObj.gHead);
+            writeData(wr, dataObj.finalData);
+        }
+
+        public void openFile(string fileName)
+        {
+            this.Text = fileName; // sets the text of the form to the file name
+            FileStream fs = new FileStream(fileName, FileMode.Create);
+            BinaryReader re = new BinaryReader(fs);
+            // setup the header information
+            readData(re, dataObj.gHead);
+        }
+
+        private void writeData(BinaryWriter file, Header header)
+        {
+            file.Write(header.getHeight());
+            file.Write(header.getWidth());
+            file.Write(header.getQuality());
+        }
+
+        private void writeData(BinaryWriter file, sbyte[] data)
+        {
+            for(int i = 0; i < dataObj.paddedHeight * dataObj.paddedWidth; i++)
+                file.Write(data[i]);
+        }
+
+        private void readData(BinaryReader file, Header header)
+        {
+            header.setHeight(file.ReadInt32());
+            header.setWidth(file.ReadInt32());
+            header.setQuality(file.ReadByte());
+        }
+
+        private void readData(BinaryReader file, Header head, sbyte[] data)
+        {
+            int i = 0;
+            while(true)
+            {
+                try
+                {
+                    data[i++] = file.ReadSByte();
+                }catch(Exception e)
+                {
+                    break;
+                }
+            }
         }
     }
 }

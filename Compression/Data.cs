@@ -32,9 +32,20 @@ namespace Compression
         byte[,] gData;
         byte[,] bData;
         Color[,] YCbCrData;
+        double[,] forwardDCTData;
+        byte[,] inverseDCTData;
 
-        private double[,] forwardDCTData;
-        private byte[,] inverseDCTData;
+        public int orgWidth, 
+                   orgHeight, 
+                   paddedWidth, 
+                   paddedHeight;
+
+        public sbyte[] finalData;
+        public sbyte[] yEncoded,
+                       cbEncoded,
+                       crEncoded;
+
+        public Header gHead = new Header();
 
         /*
             Quantization Tables
