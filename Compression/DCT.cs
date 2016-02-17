@@ -61,7 +61,6 @@ namespace Compression
             return forwardData;
         }
 
-        // testing
         public byte[,] inverseDCTByte(double[,] dctData)
         {
             byte[,] inverseData = new byte[8, 8];

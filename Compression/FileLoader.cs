@@ -44,7 +44,7 @@ namespace Compression
                 string ext = Path.GetExtension(openFileDialog.FileName); // includes the period
                 if(ext == ".rippeg")
                 {
-
+                    pictureBox2.Image = null;
                     openFile(openFileDialog.FileName);
                 }
                 else
@@ -55,6 +55,7 @@ namespace Compression
                     dataObj.gHead.setHeight((short)dataObj.getOriginal().Height);
                     dataObj.gHead.setWidth((short)dataObj.getOriginal().Width);
                     dataObj.gHead.setQuality(1);
+                    pictureBox2.Image = null;
                 }
                 rgbChangeButton.Enabled = true;
                 ShowYButton.Enabled = false;
