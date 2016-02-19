@@ -235,7 +235,6 @@ namespace Compression
             }
         }
 
-        // fix this
         private void splitFinalData()
         {
             int fd = 0;
@@ -680,11 +679,10 @@ namespace Compression
             }
             re.Close();
             // set pixels
-            updateRGBChangerYCrCBData();
 
             dataObj.setYCrCbtoRGB(
                 dataChanger.sYCbCrtoRGB(
-                    dataObj.getRGBtoYCrCb(), dataObj
+                    dataObj
                     ));
             updateRGBDataObject();
             dataChanger = new RGBChanger();

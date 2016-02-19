@@ -141,19 +141,16 @@ namespace Compression
             return outBmp;
         }
 
-        public Bitmap sYCbCrtoRGB(Bitmap bmp, Data dataObj)
+        public Bitmap sYCbCrtoRGB(Data dataObj)
         {
-
-            int width = bmp.Width;
-            int height = bmp.Height;
+            int width = dataObj.gHead.getWidth();
+            int height = dataObj.gHead.getHeight();
             this.rData = new byte[width, height];
             this.gData = new byte[width, height];
             this.bData = new byte[width, height];
 
-            Bitmap outBmp = new Bitmap(bmp.Width, bmp.Height);
+            Bitmap outBmp = new Bitmap(width, height);
 
-            // Can't use the height and width of original. Needs to be the sub sampled size
-            // need to handle doubling up the information
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
