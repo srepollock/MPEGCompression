@@ -308,8 +308,6 @@ namespace Compression
             dataObj.setbData(dataChanger.getbData());
         }
 
-        
-
         private void ShowYButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getYBitmap(pictureBox1.Image);
@@ -418,16 +416,18 @@ namespace Compression
                 dataObj.paddedWidth = dataObj.gHead.getWidth();
                 dataObj.paddedHeight = dataObj.gHead.getHeight();
             }
+            
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
-            dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.yEncoded = new sbyte[dataObj.gHead.getWidth() * dataObj.gHead.getHeight()];
             dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setyData(new byte[dataObj.gHead.getWidth(), dataObj.gHead.getHeight()]);
             dataObj.setCbData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCrData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setdyData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdyData(new double[dataObj.gHead.getWidth(), dataObj.gHead.getHeight()]);
             dataObj.setdCbData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setdCrData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            // read the data
             readData(re, dataObj.gHead, dataObj.finalData);
             // split the data
             splitFinalData();
@@ -443,7 +443,7 @@ namespace Compression
                     // DCT, Quantize, ZigZag and RLE
                     // Y
                     // block
-                    tempY = block.generateBlocks(dataObj.yEncoded, pos);
+                    tempY = block.generateBlocks(dataObj.yEncoded, pos); // put in x, y here for cool spirals
                     // unzigzag
                     stempY = zz.unzigzag(tempY);
                     // inverse quantize
