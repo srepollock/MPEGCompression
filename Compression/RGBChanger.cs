@@ -34,12 +34,12 @@ namespace Compression
 
             returns the new bitmap
         */
-        public Bitmap RGBtoYCbCr(Bitmap orgBmp)
+        public Bitmap RGBtoYCbCr(Bitmap orgBmp, Data dataObj)
         {
             Bitmap bmp = orgBmp;
 
-            int width = bmp.Width;
-            int height = bmp.Height;
+            int width = dataObj.gHead.getWidth();
+            int height = dataObj.gHead.getHeight();
             this.yData = new byte[width, height];                     //luma
             this.CbData = new byte[width, height];                     //Cb
             this.CrData = new byte[width, height];                     //Cr
@@ -77,8 +77,8 @@ namespace Compression
 
             // I can use this image returned information's pixels to play around with
 
-            subsample(CbData, height, width);
-            subsample(CrData, height, width);
+            Sampler.subsample(CbData, dataObj);
+            Sampler.subsample(CrData, dataObj);
 
             // subsample
             for (int y = 0; y < height; y++)
@@ -175,20 +175,6 @@ namespace Compression
             }
 
             return outBmp;
-        }
-
-        private void subsample(byte[,] org, int height, int width)
-        {
-            for (int y = 0; y < height; y += 2)
-            {
-                for (int x = 0; x < width; x += 2)
-                {
-                    if ((y + 1) < height)
-                        org[x + 1, y] = org[x + 1, y + 1] = org[x, y + 1] = org[x, y];
-                    else
-                        org[x + 1, y] = org[x, y];
-                }
-            }
         }
 
         public byte[,] getyData() { return this.yData; }

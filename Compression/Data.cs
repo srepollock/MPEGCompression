@@ -139,6 +139,19 @@ namespace Compression
 
             return outBmp;
         }
+
+        public Bitmap generateBitmap() {
+            Bitmap outBmp = new Bitmap(gHead.getWidth(), gHead.getHeight()); 
+            for (int y = 0; y < gHead.getHeight(); y++) 
+            { 
+                for (int x = 0; x < gHead.getWidth(); x++) 
+                { 
+                    outBmp.SetPixel(x, y, YCbCrData[x, y]); 
+                }
+            }
+            return outBmp;
+        }
+
         /*
             Getters
         */

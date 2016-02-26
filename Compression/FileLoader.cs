@@ -96,7 +96,7 @@ namespace Compression
 
             dataObj.setRGBtoYCrCb(
                 dataChanger.RGBtoYCbCr(
-                    dataObj.getOriginal()
+                    dataObj.getOriginal(), dataObj
                     )); // This will set the data changed bitmap to that of the returned bitmap from the data changer
             updateYCrCbDataObject();
 
@@ -187,6 +187,7 @@ namespace Compression
                     stempCr = q.quantizeData(tempDCr, dataObj);
                     // zigzag
                     szztempR = zz.zigzag(stempCr);
+                    
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.crEncoded, sz);
@@ -329,7 +330,6 @@ namespace Compression
         {
             pictureBox3.Image = dataObj.getRGBtoYCrCb();
         }
-
 
         public void saveFile(string fileName)
         {
