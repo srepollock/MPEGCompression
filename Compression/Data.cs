@@ -25,9 +25,9 @@ namespace Compression
         /*
             Image byte data
         */
-        byte[,] yData;
-        byte[,] CbData;
-        byte[,] CrData;
+        public byte[,] yData;
+        public byte[,] CbData;
+        public byte[,] CrData;
         double[,] dyData;
         double[,] dCbData;
         double[,] dCrData;
@@ -146,7 +146,7 @@ namespace Compression
             { 
                 for (int x = 0; x < gHead.getWidth(); x++) 
                 { 
-                    outBmp.SetPixel(x, y, YCbCrData[x, y]); 
+                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x,y], gData[x,y], bData[x,y])); 
                 }
             }
             return outBmp;

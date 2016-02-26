@@ -8,32 +8,34 @@ namespace Compression
 {
     class Sampler
     {
-        public static void upsample(byte[,] org, Data dataObj)
+        public static byte[,] upsample(byte[,] org, ref Data dataObj)
         {
             int height = dataObj.gHead.getHeight(),
                 width = dataObj.gHead.getWidth();
-            for (int y = 0; y < height; y += 2)
+            byte[,] output = new byte[width, height];
+            for (int y = 0, yy = 0; y < height; y += 2, yy++)
             {
-                for (int x = 0; x < width; x += 2)
+                for (int x = 0, xx = 0; x < width; x += 2, xx++)
                 {
                     if ((y + 1) < height)
-                        org[x + 1, y] = org[x + 1, y + 1] = org[x, y + 1] = org[x, y];
+                        output[x + 1, y] = output[x + 1, y + 1] = output[x, y + 1] = output[x, y] = org[xx, yy];
                     else
-                        org[x + 1, y] = org[x, y];
+                        output[x + 1, y] = org[xx, yy];
                 }
             }
+            return output;
         }
 
-        public static byte[,] subsample(byte[,] org, Data dataObj)
+        public static byte[,] subsample(byte[,] org, ref Data dataObj)
         {
             int height = dataObj.gHead.getHeight(),
                 width = dataObj.gHead.getWidth(),
                 hHeight = height / 2,
                 hWidth = width / 2;
             byte[,] output = new byte[hWidth, hHeight];
-            for (int y = 0, yy = 0; y < height; y += 2, yy++)
+            for (int y = 0, yy = 0; y < hHeight; y += 2, yy++)
             {
-                for (int x = 0, xx = 0; x < width; x += 2, xx++)
+                for (int x = 0, xx = 0; x < hWidth; x += 2, xx++)
                 {
                     output[xx, yy] = org[x, y];
                 }
@@ -41,23 +43,25 @@ namespace Compression
             return output;
         }
 
-        public static void supsample(sbyte[,] org, Data dataObj)
+        public static sbyte[,] supsample(sbyte[,] org, ref Data dataObj)
         {
             int height = dataObj.gHead.getHeight(),
                 width = dataObj.gHead.getWidth();
-            for (int y = 0; y < height; y += 2)
+            sbyte[,] output = new sbyte[width, height];
+            for (int y = 0, yy = 0; y < height; y += 2, yy++)
             {
-                for (int x = 0; x < width; x += 2)
+                for (int x = 0, xx = 0; x < width; x += 2, xx++)
                 {
                     if ((y + 1) < height)
-                        org[x + 1, y] = org[x + 1, y + 1] = org[x, y + 1] = org[x, y];
+                        output[x + 1, y] = output[x + 1, y + 1] = output[x, y + 1] = output[x, y] = org[xx, yy];
                     else
-                        org[x + 1, y] = org[x, y];
+                        output[x + 1, y] = org[xx, yy];
                 }
             }
+            return output;
         }
 
-        public static sbyte[,] ssubsample(sbyte[,] org, Data dataObj)
+        public static sbyte[,] ssubsample(sbyte[,] org, ref Data dataObj)
         {
             int height = dataObj.gHead.getHeight(),
                 width = dataObj.gHead.getWidth(),

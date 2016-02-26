@@ -11,14 +11,6 @@ namespace Compression
     class RGBChanger
     {
 
-        byte[,] yData;
-        byte[,] CbData;
-        byte[,] CrData;
-        byte[,] rData;
-        byte[,] gData;
-        byte[,] bData;
-        Color[,] YCbCrData;
-
         /* Image data being passed in */
         public RGBChanger()
         {
@@ -34,18 +26,16 @@ namespace Compression
 
             returns the new bitmap
         */
-        public Bitmap RGBtoYCbCr(Bitmap orgBmp, Data dataObj)
+        public void RGBtoYCbCr(Bitmap orgBmp, ref Data dataObj)
         {
             Bitmap bmp = orgBmp;
 
             int width = dataObj.gHead.getWidth();
             int height = dataObj.gHead.getHeight();
-            this.yData = new byte[width, height];                     //luma
-            this.CbData = new byte[width, height];                     //Cb
-            this.CrData = new byte[width, height];                     //Cr
-            YCbCrData = new Color[width, height];
-
-            Bitmap outBmp = new Bitmap(orgBmp.Width, orgBmp.Height);
+            byte[,] yData = new byte[width, height];                     //luma
+            byte[,] CbData = new byte[width, height];                     //Cb
+            byte[,] CrData = new byte[width, height];                     //Cr
+            Color[,] YCbCrData = new Color[width, height];
 
             unsafe
             {
@@ -74,34 +64,20 @@ namespace Compression
                 }
                 bmp.UnlockBits(bitmapData);
             }
-
-            // I can use this image returned information's pixels to play around with
-
-            Sampler.subsample(CbData, dataObj);
-            Sampler.subsample(CrData, dataObj);
-
-            // subsample
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    outBmp.SetPixel(x, y, YCbCrData[x, y]);
-                }
-            }
-
-            return outBmp;
+            dataObj.setyData(yData);
+            dataObj.setCbData(CbData);
+            dataObj.setCrData(CrData);
+            dataObj.setYCrCbData(YCbCrData);
         }
 
-        public Bitmap YCbCrtoRGB(Bitmap bmp)
+        public void YCbCrtoRGB(ref Data dataObj)
         {
 
-            int width = bmp.Width;
-            int height = bmp.Height;
-            this.rData = new byte[width, height];
-            this.gData = new byte[width, height];
-            this.bData = new byte[width, height];
-
-            Bitmap outBmp = new Bitmap(bmp.Width, bmp.Height);
+            int width = dataObj.gHead.getWidth();
+            int height = dataObj.gHead.getHeight();
+            byte[,] rData = new byte[width, height];
+            byte[,] gData = new byte[width, height];
+            byte[,] bData = new byte[width, height];
 
             // Can't use the height and width of original. Needs to be the sub sampled size
             // need to handle doubling up the information
@@ -111,9 +87,9 @@ namespace Compression
                 {
                     int r, g, b;
 
-                    r = (int)(yData[x, y] + ( 1.402 * ((CrData[x, y] - 128))));
-                    g = (int)(yData[x, y] - (0.34414 * (CbData[x,y] - 128)) - (0.71414 * (CrData[x,y] - 128)));
-                    b = (int)(yData[x,y] + (1.772 * (CbData[x,y] - 128)));
+                    r = (int)(dataObj.yData[x, y] + ( 1.402 * ((dataObj.CrData[x, y] - 128))));
+                    g = (int)(dataObj.yData[x, y] - (0.34414 * (dataObj.CbData[x,y] - 128)) - (0.71414 * (dataObj.CrData[x,y] - 128)));
+                    b = (int)(dataObj.yData[x,y] + (1.772 * (dataObj.CbData[x,y] - 128)));
 
                     r = Math.Max(0, Math.Min(255, r));
                     g = Math.Max(0, Math.Min(255, g));
@@ -124,25 +100,18 @@ namespace Compression
                     bData[x, y] = (byte)b;
                 }
             }
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x, y], gData[x, y], bData[x, y]));
-                }
-            }
-
-            return outBmp;
+            dataObj.setrData(rData);
+            dataObj.setgData(gData);
+            dataObj.setbData(bData);
         }
 
-        public Bitmap sYCbCrtoRGB(Data dataObj)
+        public void sYCbCrtoRGB(ref Data dataObj)
         {
             int width = dataObj.gHead.getWidth();
             int height = dataObj.gHead.getHeight();
-            this.rData = new byte[width, height];
-            this.gData = new byte[width, height];
-            this.bData = new byte[width, height];
+            byte[,] rData = new byte[width, height];
+            byte[,] gData = new byte[width, height];
+            byte[,] bData = new byte[width, height];
 
             Bitmap outBmp = new Bitmap(width, height);
 
@@ -165,28 +134,9 @@ namespace Compression
                     bData[x, y] = (byte)b;
                 }
             }
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x, y], gData[x, y], bData[x, y]));
-                }
-            }
-
-            return outBmp;
+            dataObj.setrData(rData);
+            dataObj.setgData(gData);
+            dataObj.setbData(bData);
         }
-
-        public byte[,] getyData() { return this.yData; }
-        public byte[,] getCbData() { return this.CbData; }
-        public byte[,] getCrData() { return this.CrData; }
-        public byte[,] getrData() { return this.rData; }
-        public byte[,] getgData() { return this.gData; }
-        public byte[,] getbData() { return this.bData; }
-        public Color[,] getYCrCbData() { return this.YCbCrData; }
-
-        public void setyData(byte[,] data) { this.yData = data; }
-        public void setCbData(byte[,] data) { this.CbData = data; }
-        public void setCrData(byte[,] data) { this.CrData = data; }
     }
 }

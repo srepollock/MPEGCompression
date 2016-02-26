@@ -85,44 +85,20 @@ namespace Compression
 
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
-            int padW = 0,
-                padH = 0,
-                sz = 0;
+            int sz = 0;
             byte[,] tempY, tempCb, tempCr;
             sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
             sbyte[] szztempY, szztempB, szztempR;
             /* This data needs to be saved for the header information */
 
-            dataObj.setRGBtoYCrCb(
-                dataChanger.RGBtoYCbCr(
-                    dataObj.getOriginal(), dataObj
-                    )); // This will set the data changed bitmap to that of the returned bitmap from the data changer
-            updateYCrCbDataObject();
+            Pad padding = new Pad(ref dataObj);
 
-            // This will be run on Cb and Cr data
-            // run dct and quantize here. We pass in 8x8's
-            // update offset by incrementing by 8 each time
-            // generate 8x8 blocks
+            dataChanger.RGBtoYCbCr(
+                dataObj.getOriginal(), ref dataObj
+                ); // This will set the data changed bitmap to that of the returned bitmap from the data changer
 
-            // check if the size is divisible by 8, if not pad
-            int modH = dataObj.gHead.getHeight() % 8, 
-                modW = dataObj.gHead.getWidth() % 8; // array is 1 # less for each
-            if(modW != 0 || modH != 0)
-            {
-                padW = (8 - modW == 8) ? 0 : 8 - modW;
-                padH = (8 - modH == 8) ? 0 : 8 - modH;
-                dataObj.paddedWidth = dataObj.gHead.getWidth() + padW;
-                dataObj.paddedHeight = dataObj.gHead.getHeight() + padH;
-                dataObj.setyData(padData(dataObj.getyData(), padW, padH));
-                dataObj.setCbData(padData(dataObj.getCbData(), padW, padH));
-                dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
-            }
-            else
-            {
-                dataObj.paddedWidth = dataObj.gHead.getWidth();
-                dataObj.paddedHeight = dataObj.gHead.getHeight();
-            }
+            // check if the size is divisible by 16, if not pad
 
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
@@ -130,9 +106,9 @@ namespace Compression
             dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
 
             int pos = 0;
-            for (int y = 0; y < dataObj.paddedHeight; y += 8)
+            for (int y = 0; y < dataObj.gHead.getHeight(); y += 8)
             {
-                for (int x = 0; x < dataObj.paddedWidth; x += 8)
+                for (int x = 0; x < dataObj.gHead.getWidth(); x += 8)
                 {
                     sz += 64;
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
@@ -157,8 +133,17 @@ namespace Compression
                     tempDY = q.inverseQuantizeLuma(stempY, dataObj);
                     tempY = dctObj.inverseDCTByte(tempDY);
                     block.putback(dataObj.getyData(), tempY, x, y);
-                    
-                    // Cb
+                    pos += 64;
+                }
+            }
+            dataObj.setCbData(Sampler.subsample(dataObj.CbData, ref dataObj));
+            dataObj.setCrData(Sampler.subsample(dataObj.CrData, ref dataObj));
+            pos = 0;
+            for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
+                {
+                    // Cb (data is subsampled)
                     tempCb = block.generate2DBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
@@ -179,15 +164,14 @@ namespace Compression
                     tempDCb = q.inverseQuantizeData(stempCb, dataObj);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
                     block.putback(dataObj.getCbData(), tempCb, x, y);
-                    
-                    // Cr
+
+                    // Cr (data is subsampled)
                     tempCr = block.generate2DBlocks(dataObj.getCrData(), x, y);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
                     stempCr = q.quantizeData(tempDCr, dataObj);
                     // zigzag
                     szztempR = zz.zigzag(stempCr);
-                    
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.crEncoded, sz);
@@ -206,15 +190,16 @@ namespace Compression
                 }
             }
             // update the RGBChanger data to what we have in the dataObj
-            updateRGBChangerYCrCBData();
             setFinalData();
 
-            dataObj.setYCrCbtoRGB(
-                dataChanger.YCbCrtoRGB(
-                    dataObj.getRGBtoYCrCb()
-                    ));
-            updateRGBDataObject();
+            // upsample data
+            dataObj.setCbData(Sampler.upsample(dataObj.getCbData(), ref dataObj));
+            dataObj.setCrData(Sampler.upsample(dataObj.getCrData(), ref dataObj));
+
+            dataChanger.YCbCrtoRGB(ref dataObj);
             dataChanger = new RGBChanger();
+
+            pictureBox2.Image = dataObj.generateBitmap();
 
             ShowYButton.Enabled = true;
             showCbButton.Enabled = true;
@@ -262,13 +247,13 @@ namespace Compression
 
         private byte[,] padData(byte[,] data, int padxby, int padyby)
         {
-            int width = dataObj.getOriginal().Width, height = dataObj.getOriginal().Height;
+            int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
             byte[,] temp = new byte[width + padxby, height + padyby];
             for (int y = 0; y < height + padyby; y++)
             {
-                for(int x = 0; x < width + padxby; x++)
+                for (int x = 0; x < width + padxby; x++)
                 {
-                    if(x >= width && y >= height)
+                    if (x >= width && y >= height)
                     {
                         temp[x, y] = 0;
                     }
@@ -289,11 +274,42 @@ namespace Compression
             return temp;
         }
 
+        private byte[,] cpadData(byte[,] data, int padxby, int padyby)
+        {
+            int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
+            byte[,] temp = new byte[(width + padxby) / 2, (height + padyby) / 2];
+            for (int y = 0; y < (height + padyby) / 2; y++)
+            {
+                for (int x = 0; x < (width + padxby) / 2; x++)
+                {
+                    if (x >= width / 2 && y >= height / 2)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (x >= width / 2)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (y >= height / 2)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else
+                    {
+                        temp[x, y] = data[x, y];
+                    }
+                }
+            }
+            return temp;
+        }
+        /*
         private void updateYCrCbDataObject()
         {
             dataObj.setyData(dataChanger.getyData());
-            dataObj.setCbData(dataChanger.getCbData());
-            dataObj.setCrData(dataChanger.getCrData());
+            // subsample data
+            dataObj.setCbData(Sampler.subsample(dataChanger.getCbData(), dataObj));
+            dataObj.setCrData(Sampler.subsample(dataChanger.getCrData(), dataObj));
+
             dataObj.setYCrCbData(dataChanger.getYCrCbData());
         }
 
@@ -303,14 +319,14 @@ namespace Compression
             dataChanger.setCbData(dataObj.getCbData());
             dataChanger.setCrData(dataObj.getCrData());
         }
-
+        
         private void updateRGBDataObject()
         {
             dataObj.setrData(dataChanger.getrData());
             dataObj.setgData(dataChanger.getgData());
             dataObj.setbData(dataChanger.getbData());
         }
-
+        */
         private void ShowYButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getYBitmap(pictureBox1.Image);
@@ -351,23 +367,9 @@ namespace Compression
             // setup the header information
             readData(re, dataObj.gHead);
             dataObj.setRGBtoYCrCb(new Bitmap(dataObj.gHead.getWidth(), dataObj.gHead.getHeight()));
-            int modH = dataObj.gHead.getHeight() % 8,
-                modW = dataObj.gHead.getWidth() % 8, // array is 1 # less for each
-                padW = 0,
-                padH = 0;
-            if (modW != 0 || modH != 0)
-            {
-                padW = (8 - modW == 8) ? 0 : 8 - modW;
-                padH = (8 - modH == 8) ? 0 : 8 - modH;
-                dataObj.paddedWidth = dataObj.gHead.getWidth() + padW;
-                dataObj.paddedHeight = dataObj.gHead.getHeight() + padH;
-            }
-            else
-            {
-                dataObj.paddedWidth = dataObj.gHead.getWidth();
-                dataObj.paddedHeight = dataObj.gHead.getHeight();
-            }
-            
+
+            Pad padding = new Pad(ref dataObj);
+
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
@@ -427,11 +429,9 @@ namespace Compression
             re.Close();
             // set pixels
 
-            dataObj.setYCrCbtoRGB(
-                dataChanger.sYCbCrtoRGB(
-                    dataObj
-                    ));
-            updateRGBDataObject();
+            dataChanger.sYCbCrtoRGB(
+                ref dataObj
+                );
             dataChanger = new RGBChanger();
 
             ShowYButton.Enabled = true;
@@ -439,7 +439,7 @@ namespace Compression
             ShowCrButton.Enabled = true;
             showYCbCrButton.Enabled = true;
             saveToolStripMenuItem.Enabled = true;
-            pictureBox2.Image = dataObj.getYCrCbtoRGB();
+            pictureBox2.Image = dataObj.generateBitmap();
         }
 
         private void writeData(BinaryWriter file, Header header)
