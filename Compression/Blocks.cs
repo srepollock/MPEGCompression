@@ -8,7 +8,7 @@ namespace Compression
 {
     class Blocks
     {
-        public byte[,] generateBlocks(byte[,] data, int offsetx, int offsety)
+        public byte[,] generate2DBlocks(byte[,] data, int offsetx, int offsety)
         {
             byte[,] output = new byte[8, 8];
             for (int y = 0; y < 8; y++)
@@ -27,6 +27,16 @@ namespace Compression
             for (int i = 0; i < 64; i++)
             {
                 output[i] = data[i + offsetx * offsety];
+            }
+            return output;
+        }
+
+        public sbyte[] generateBlocks(sbyte[] data, int offset)
+        {
+            sbyte[] output = new sbyte[8 * 8];
+            for (int i = 0; i < 64; i++)
+            {
+                output[i] = data[i + offset];
             }
             return output;
         }

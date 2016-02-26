@@ -135,7 +135,7 @@ namespace Compression
                     sz += 64;
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
                     // Y
-                    tempY = block.generateBlocks(dataObj.getyData(), x, y);
+                    tempY = block.generate2DBlocks(dataObj.getyData(), x, y);
                     tempDY = dctObj.forwardDCT(tempY);
                     // quantize
                     stempY = quantizeLuma(tempDY);
@@ -157,7 +157,7 @@ namespace Compression
                     block.putback(dataObj.getyData(), tempY, x, y);
                     
                     // Cb
-                    tempCb = block.generateBlocks(dataObj.getCbData(), x, y);
+                    tempCb = block.generate2DBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
                     stempCb = quantizeData(tempDCb);
@@ -179,7 +179,7 @@ namespace Compression
                     block.putback(dataObj.getCbData(), tempCb, x, y);
                     
                     // Cr
-                    tempCr = block.generateBlocks(dataObj.getCrData(), x, y);
+                    tempCr = block.generate2DBlocks(dataObj.getCrData(), x, y);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
                     stempCr = quantizeData(tempDCr);
@@ -435,6 +435,7 @@ namespace Compression
             sbyte[] tempY, tempCb, tempCr;
             sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
+            int pos = 0;
             for (int y = 0; y < dataObj.paddedHeight; y += 8)
             {
                 for (int x = 0; x < dataObj.paddedWidth; x += 8)
@@ -442,7 +443,7 @@ namespace Compression
                     // DCT, Quantize, ZigZag and RLE
                     // Y
                     // block
-                    tempY = block.generateBlocks(dataObj.yEncoded, x, y);
+                    tempY = block.generateBlocks(dataObj.yEncoded, pos);
                     // unzigzag
                     stempY = zz.unzigzag(tempY);
                     // inverse quantize
@@ -452,7 +453,7 @@ namespace Compression
 
                     // Cb
                     // block
-                    tempCb = block.generateBlocks(dataObj.cbEncoded, x, y);
+                    tempCb = block.generateBlocks(dataObj.cbEncoded, pos);
                     // unzigzag
                     stempCb = zz.unzigzag(tempCb);
                     // inverse quantize
@@ -462,13 +463,14 @@ namespace Compression
 
                     // Cr
                     // block
-                    tempCr = block.generateBlocks(dataObj.crEncoded, x, y);
+                    tempCr = block.generateBlocks(dataObj.crEncoded, pos);
                     // unzigzag
                     stempCr = zz.unzigzag(tempCr);
                     // inverse quantize
                     tempDCr = inverseQuantizeData(stempCr);
                     tempDCr = dctObj.dinverseDCT(tempDCr);
                     block.putbackd(dataObj.getdCrData(), tempDCr, x, y);
+                    pos += 64;
                 }
             }
             re.Close();
