@@ -19,6 +19,8 @@ namespace Compression
         Data dataObj;
         RGBChanger dataChanger;
         DCT dctObj;
+        ZigZag zz;
+        Blocks block;
 
         public FileLoader()
         {
@@ -26,6 +28,8 @@ namespace Compression
             dataObj = new Data(); // sets up the data object to us methods
             dctObj = new DCT();
             dataChanger = new RGBChanger();
+            zz = new ZigZag();
+            block = new Blocks();
             rgbChangeButton.Enabled = false;
             ShowYButton.Enabled = false;
             showCbButton.Enabled = false;
@@ -131,12 +135,12 @@ namespace Compression
                     sz += 64;
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
                     // Y
-                    tempY = generateBlocks(dataObj.getyData(), x, y);
+                    tempY = block.generateBlocks(dataObj.getyData(), x, y);
                     tempDY = dctObj.forwardDCT(tempY);
                     // quantize
                     stempY = quantizeLuma(tempDY);
                     // zigzag
-                    szztempY = zigzag(stempY);
+                    szztempY = zz.zigzag(stempY);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.yEncoded, sz);
@@ -146,19 +150,19 @@ namespace Compression
                     // unrle
 
                     // unzigzag
-                    stempY = unzigzag(szztempY);
+                    stempY = zz.unzigzag(szztempY);
                     // inverse quantize
                     tempDY = inverseQuantizeLuma(stempY);
                     tempY = dctObj.inverseDCTByte(tempDY);
-                    putback(dataObj.getyData(), tempY, x, y);
+                    block.putback(dataObj.getyData(), tempY, x, y);
                     
                     // Cb
-                    tempCb = generateBlocks(dataObj.getCbData(), x, y);
+                    tempCb = block.generateBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
                     stempCb = quantizeData(tempDCb);
                     // zigzag
-                    szztempB = zigzag(stempCb);
+                    szztempB = zz.zigzag(stempCb);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.cbEncoded, sz);
@@ -168,19 +172,19 @@ namespace Compression
                     // unrle
 
                     // unzigzag
-                    stempCb = unzigzag(szztempB);
+                    stempCb = zz.unzigzag(szztempB);
                     // inverse quantize
                     tempDCb = inverseQuantizeData(stempCb);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
-                    putback(dataObj.getCbData(), tempCb, x, y);
+                    block.putback(dataObj.getCbData(), tempCb, x, y);
                     
                     // Cr
-                    tempCr = generateBlocks(dataObj.getCrData(), x, y);
+                    tempCr = block.generateBlocks(dataObj.getCrData(), x, y);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
                     stempCr = quantizeData(tempDCr);
                     // zigzag
-                    szztempR = zigzag(stempCr);
+                    szztempR = zz.zigzag(stempCr);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.crEncoded, sz);
@@ -190,11 +194,11 @@ namespace Compression
                     // unrle
 
                     // unzigzag
-                    stempCr = unzigzag(szztempR);
+                    stempCr = zz.unzigzag(szztempR);
                     // inverse quantize
                     tempDCr = inverseQuantizeData(stempCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
-                    putback(dataObj.getCrData(), tempCr, x, y);
+                    block.putback(dataObj.getCrData(), tempCr, x, y);
                     pos += 64;
                 }
             }
@@ -304,60 +308,7 @@ namespace Compression
             dataObj.setbData(dataChanger.getbData());
         }
 
-        private byte[,] generateBlocks(byte[,] data, int offsetx, int offsety)
-        {
-            byte[,] output = new byte[8, 8];
-            for (int y = 0; y < 8; y++) {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = data[offsetx + x, offsety + y];
-                }
-            }
-            return output;
-        }
-
-        private sbyte[] generateBlocks(sbyte[] data, int offsetx, int offsety)
-        {
-            sbyte[] output = new sbyte[8 * 8];
-            for (int i = 0; i < 64; i++)
-            {
-                output[i] = data[i + offsetx * offsety];
-            }
-            return output;
-        }
-
-        private void putback(byte[,] original, byte[,] data, int offsetx, int offsety)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    original[offsetx + x, offsety + y] = data[x, y];
-                }
-            }
-        }
-
-        private void putbacks(sbyte[,] original, sbyte[,] data, int offsetx, int offsety)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    original[offsetx + x, offsety + y] = data[x, y];
-                }
-            }
-        }
-
-        private void putbackd(double[,] original, double[,] data, int offsetx, int offsety)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    original[offsetx + x, offsety + y] = data[x, y];
-                }
-            }
-        }
+        
 
         private void ShowYButton_Click(object sender, EventArgs e)
         {
@@ -431,162 +382,6 @@ namespace Compression
             return output;
         }
 
-        private sbyte[] zigzag(sbyte[,] data)
-        {
-            // testing
-            /*
-            byte[,] data = new byte[,]
-            {
-                {0,1,5,6,14,15,27,28 },
-                {2,4,7,13,16,26,29,42 },
-                {3,8,12,17,25,30,41,43 },
-                {9,11,18,24,31,40,44,53 },
-                {10,19,23,32,39,45,52,54 },
-                {20,22,33,38,46,51,55,60 },
-                {21,34,37,47,50,56,59,61 },
-                {35,36,48,49,57,58,62,63 }
-            };
-            */
-            sbyte[] result = new sbyte[8 * 8];
-
-            int i = 0,
-                x = 0,
-                y = 0,
-                d = 0; // -1 for the to-right move, +1 for the bottom-left move
-            bool flag = false;
-            bool reverseFlag = false;
-
-            do
-            {
-                flag = false;
-                if (x > 7 || reverseFlag)
-                {
-                    d++;
-                    y = d;
-                    reverseFlag = true;
-                    if(x > 7) x--;
-                    result[i] = data[x, y];
-                    while (x != d)
-                    {
-                        result[++i] = data[--x, ++y];
-                    }
-                    if(++d > 7) break;
-                    x = d;
-                    result[++i] = data[x, y];
-                    while (y != d)
-                    {
-                        result[++i] = data[++x, --y];
-                    }
-                    i++;
-                }
-                else
-                {
-                    result[i] = data[x, y];
-                    if (i == 0) x++;
-                    while (x != 0)
-                    {
-                        result[++i] = data[--x, ++y];
-                    }
-                    while (y != 0)
-                    {
-                        if (flag || y == 1) x++;
-                        else  y += 2;
-                        result[++i] = data[x, --y];
-                        if (!flag) flag = true;
-                    }
-                    x++; y = 0; i++;
-                }
-            } while (i < 64);
-
-            result[63] = data[7, 7];
-
-            return result;
-        }
-
-        private sbyte[,] unzigzag(sbyte[] data)
-        {
-            // testing
-            /*
-            byte[,] data = new byte[,]
-            {
-                {0,1,5,6,14,15,27,28 },
-                {2,4,7,13,16,26,29,42 },
-                {3,8,12,17,25,30,41,43 },
-                {9,11,18,24,31,40,44,53 },
-                {10,19,23,32,39,45,52,54 },
-                {20,22,33,38,46,51,55,60 },
-                {21,34,37,47,50,56,59,61 },
-                {35,36,48,49,57,58,62,63 }
-            };
-            */
-            sbyte[,] result = new sbyte[8, 8];
-
-            int i = 0,
-                x = 0,
-                y = 0,
-                d = 0; // -1 for the to-right move, +1 for the bottom-left move
-            bool flag = false;
-            bool reverseFlag = false;
-
-            do
-            {
-                flag = false;
-                if (x >= 8 || reverseFlag)
-                {
-                    d++;
-                    y = d;
-                    reverseFlag = true;
-                    if (x >= 8)
-                        x--;
-                    result[x,y] = data[i];
-                    while (x != d)
-                    {
-                        result[--x, ++y] = data[++i];
-                    }
-                    if (++d > 7) break;
-                    x = d;
-                    result[x, y] = data[++i];
-                    while (y != d)
-                    {
-                        result[++x, --y] = data[++i];
-                    }
-                    i++;
-                }
-                else
-                {
-                    result[x, y] = data[i];
-                    if (i == 0)
-                        x++;
-                    while (x != 0)
-                    {
-                        i++;
-                        x--;
-                        y++;
-                        result[x, y] = data[i];
-                    }
-                    while (y != 0)
-                    {
-                        i++;
-                        if (flag || y == 1)
-                            x++;
-                        else
-                            y += 2;
-                        y--;
-                        result[x, y] = data[i];
-                        if (!flag)
-                            flag = true;
-                    }
-                    x++;
-                    y = 0;
-                    i++;
-                }
-            } while (i < 64);
-
-            result[7, 7] = data[63];
-
-            return result;
-        }
-
         public void saveFile(string fileName)
         {
             if (pictureBox2.Image == null) return;
@@ -638,7 +433,6 @@ namespace Compression
             splitFinalData();
 
             sbyte[] tempY, tempCb, tempCr;
-            byte[,] btempY, btempCb, btempCr;
             sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
             for (int y = 0; y < dataObj.paddedHeight; y += 8)
@@ -648,33 +442,33 @@ namespace Compression
                     // DCT, Quantize, ZigZag and RLE
                     // Y
                     // block
-                    tempY = generateBlocks(dataObj.yEncoded, x, y);
+                    tempY = block.generateBlocks(dataObj.yEncoded, x, y);
                     // unzigzag
-                    stempY = unzigzag(tempY);
+                    stempY = zz.unzigzag(tempY);
                     // inverse quantize
                     tempDY = inverseQuantizeLuma(stempY);
                     tempDY = dctObj.dinverseDCT(tempDY);
-                    putbackd(dataObj.getdyData(), tempDY, x, y);
+                    block.putbackd(dataObj.getdyData(), tempDY, x, y);
 
                     // Cb
                     // block
-                    tempCb = generateBlocks(dataObj.cbEncoded, x, y);
+                    tempCb = block.generateBlocks(dataObj.cbEncoded, x, y);
                     // unzigzag
-                    stempCb = unzigzag(tempCb);
+                    stempCb = zz.unzigzag(tempCb);
                     // inverse quantize
                     tempDCb = inverseQuantizeData(stempCb);
                     tempDCb = dctObj.dinverseDCT(tempDCb);
-                    putbackd(dataObj.getdCbData(), tempDCb, x, y);
+                    block.putbackd(dataObj.getdCbData(), tempDCb, x, y);
 
                     // Cr
                     // block
-                    tempCr = generateBlocks(dataObj.crEncoded, x, y);
+                    tempCr = block.generateBlocks(dataObj.crEncoded, x, y);
                     // unzigzag
-                    stempCr = unzigzag(tempCr);
+                    stempCr = zz.unzigzag(tempCr);
                     // inverse quantize
                     tempDCr = inverseQuantizeData(stempCr);
                     tempDCr = dctObj.dinverseDCT(tempDCr);
-                    putbackd(dataObj.getdCrData(), tempDCr, x, y);
+                    block.putbackd(dataObj.getdCrData(), tempDCr, x, y);
                 }
             }
             re.Close();
