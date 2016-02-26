@@ -14,9 +14,6 @@ namespace Compression
         byte[,] yData;
         byte[,] CbData;
         byte[,] CrData;
-        sbyte[,] srData;
-        sbyte[,] sgData;
-        sbyte[,] sbData;
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;
@@ -77,8 +74,6 @@ namespace Compression
                 }
                 bmp.UnlockBits(bitmapData);
             }
-
-
 
             // I can use this image returned information's pixels to play around with
 

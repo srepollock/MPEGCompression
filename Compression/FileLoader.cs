@@ -21,6 +21,7 @@ namespace Compression
         DCT dctObj;
         ZigZag zz;
         Blocks block;
+        Quantize q;
 
         public FileLoader()
         {
@@ -30,6 +31,7 @@ namespace Compression
             dataChanger = new RGBChanger();
             zz = new ZigZag();
             block = new Blocks();
+            q = new Quantize();
             rgbChangeButton.Enabled = false;
             ShowYButton.Enabled = false;
             showCbButton.Enabled = false;
@@ -138,7 +140,7 @@ namespace Compression
                     tempY = block.generate2DBlocks(dataObj.getyData(), x, y);
                     tempDY = dctObj.forwardDCT(tempY);
                     // quantize
-                    stempY = quantizeLuma(tempDY);
+                    stempY = q.quantizeLuma(tempDY, dataObj);
                     // zigzag
                     szztempY = zz.zigzag(stempY);
 
@@ -152,7 +154,7 @@ namespace Compression
                     // unzigzag
                     stempY = zz.unzigzag(szztempY);
                     // inverse quantize
-                    tempDY = inverseQuantizeLuma(stempY);
+                    tempDY = q.inverseQuantizeLuma(stempY, dataObj);
                     tempY = dctObj.inverseDCTByte(tempDY);
                     block.putback(dataObj.getyData(), tempY, x, y);
                     
@@ -160,7 +162,7 @@ namespace Compression
                     tempCb = block.generate2DBlocks(dataObj.getCbData(), x, y);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
-                    stempCb = quantizeData(tempDCb);
+                    stempCb = q.quantizeData(tempDCb, dataObj);
                     // zigzag
                     szztempB = zz.zigzag(stempCb);
 
@@ -174,7 +176,7 @@ namespace Compression
                     // unzigzag
                     stempCb = zz.unzigzag(szztempB);
                     // inverse quantize
-                    tempDCb = inverseQuantizeData(stempCb);
+                    tempDCb = q.inverseQuantizeData(stempCb, dataObj);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
                     block.putback(dataObj.getCbData(), tempCb, x, y);
                     
@@ -182,7 +184,7 @@ namespace Compression
                     tempCr = block.generate2DBlocks(dataObj.getCrData(), x, y);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
-                    stempCr = quantizeData(tempDCr);
+                    stempCr = q.quantizeData(tempDCr, dataObj);
                     // zigzag
                     szztempR = zz.zigzag(stempCr);
 
@@ -196,7 +198,7 @@ namespace Compression
                     // unzigzag
                     stempCr = zz.unzigzag(szztempR);
                     // inverse quantize
-                    tempDCr = inverseQuantizeData(stempCr);
+                    tempDCr = q.inverseQuantizeData(stempCr, dataObj);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
                     block.putback(dataObj.getCrData(), tempCr, x, y);
                     pos += 64;
@@ -328,57 +330,6 @@ namespace Compression
             pictureBox3.Image = dataObj.getRGBtoYCrCb();
         }
 
-        private sbyte[,] quantizeData(double[,] data)
-        {
-            sbyte[,] output = new sbyte[8,8];
-            for(int y = 0; y < 8; y++)
-            {
-                for(int x = 0; x < 8; x++)
-                {
-                    output[x, y] = Convert.ToSByte(Math.Round(data[x, y] / dataObj.chrominance[x, y]));
-                }
-            }
-            return output;
-        }
-
-        private double[,] inverseQuantizeData(sbyte[,] data)
-        {
-            double[,] output = new double[8, 8];
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = (data[x, y] * dataObj.chrominance[x, y]);
-                }
-            }
-            return output;
-        }
-
-        private sbyte[,] quantizeLuma(double[,] data)
-        {
-            sbyte[,] output = new sbyte[8, 8];
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = Convert.ToSByte(Math.Round((double)(data[x, y] / dataObj.luminance[x, y])));
-                }
-            }
-            return output;
-        }
-
-        private double[,] inverseQuantizeLuma(sbyte[,] data)
-        {
-            double[,] output = new double[8, 8];
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = data[x, y] * dataObj.luminance[x, y];
-                }
-            }
-            return output;
-        }
 
         public void saveFile(string fileName)
         {
@@ -418,13 +369,13 @@ namespace Compression
             }
             
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
-            dataObj.yEncoded = new sbyte[dataObj.gHead.getWidth() * dataObj.gHead.getHeight()];
+            dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.setyData(new byte[dataObj.gHead.getWidth(), dataObj.gHead.getHeight()]);
+            dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCbData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCrData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setdyData(new double[dataObj.gHead.getWidth(), dataObj.gHead.getHeight()]);
+            dataObj.setdyData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setdCbData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setdCrData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
             // read the data
@@ -447,7 +398,7 @@ namespace Compression
                     // unzigzag
                     stempY = zz.unzigzag(tempY);
                     // inverse quantize
-                    tempDY = inverseQuantizeLuma(stempY);
+                    tempDY = q.inverseQuantizeLuma(stempY, dataObj);
                     tempDY = dctObj.dinverseDCT(tempDY);
                     block.putbackd(dataObj.getdyData(), tempDY, x, y);
 
@@ -457,7 +408,7 @@ namespace Compression
                     // unzigzag
                     stempCb = zz.unzigzag(tempCb);
                     // inverse quantize
-                    tempDCb = inverseQuantizeData(stempCb);
+                    tempDCb = q.inverseQuantizeData(stempCb, dataObj);
                     tempDCb = dctObj.dinverseDCT(tempDCb);
                     block.putbackd(dataObj.getdCbData(), tempDCb, x, y);
 
@@ -467,7 +418,7 @@ namespace Compression
                     // unzigzag
                     stempCr = zz.unzigzag(tempCr);
                     // inverse quantize
-                    tempDCr = inverseQuantizeData(stempCr);
+                    tempDCr = q.inverseQuantizeData(stempCr, dataObj);
                     tempDCr = dctObj.dinverseDCT(tempDCr);
                     block.putbackd(dataObj.getdCrData(), tempDCr, x, y);
                     pos += 64;
