@@ -98,7 +98,10 @@ namespace Compression
                 dataObj.getOriginal(), ref dataObj
                 ); // This will set the data changed bitmap to that of the returned bitmap from the data changer
 
-            // check if the size is divisible by 16, if not pad
+            // pad data
+            dataObj.setyData(padData(dataObj.getyData(), padding.padW, padding.padH));
+            dataObj.setCbData(padData(dataObj.getCbData(), padding.padW, padding.padH));
+            dataObj.setCrData(padData(dataObj.getCrData(), padding.padW, padding.padH));
 
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
@@ -106,9 +109,9 @@ namespace Compression
             dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
 
             int pos = 0;
-            for (int y = 0; y < dataObj.gHead.getHeight(); y += 8)
+            for (int y = 0; y < dataObj.paddedHeight; y += 8)
             {
-                for (int x = 0; x < dataObj.gHead.getWidth(); x += 8)
+                for (int x = 0; x < dataObj.paddedWidth; x += 8)
                 {
                     sz += 64;
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
@@ -199,14 +202,12 @@ namespace Compression
             dataChanger.YCbCrtoRGB(ref dataObj);
             dataChanger = new RGBChanger();
 
-            pictureBox2.Image = dataObj.generateBitmap();
-
             ShowYButton.Enabled = true;
             showCbButton.Enabled = true;
             ShowCrButton.Enabled = true;
             showYCbCrButton.Enabled = true;
             saveToolStripMenuItem.Enabled = true;
-            pictureBox2.Image = dataObj.getYCrCbtoRGB();
+            pictureBox2.Image = dataObj.generateBitmap();
         }
 
         private void setFinalData()
@@ -366,7 +367,6 @@ namespace Compression
             BinaryReader re = new BinaryReader(File.OpenRead(fileName));
             // setup the header information
             readData(re, dataObj.gHead);
-            dataObj.setRGBtoYCrCb(new Bitmap(dataObj.gHead.getWidth(), dataObj.gHead.getHeight()));
 
             Pad padding = new Pad(ref dataObj);
 

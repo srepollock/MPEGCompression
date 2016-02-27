@@ -8,7 +8,7 @@ namespace Compression
 {
     class Pad
     {
-        int modH, modW, padW, padH;
+        public int modH, modW, padW, padH;
         public Pad(ref Data dataObj)
         {
             modH = dataObj.gHead.getHeight() % 16;
