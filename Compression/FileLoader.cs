@@ -105,8 +105,8 @@ namespace Compression
 
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.cbEncoded = new sbyte[dataObj.gHead.getWidth() * dataObj.gHead.getHeight()];
+            dataObj.crEncoded = new sbyte[dataObj.gHead.getWidth() * dataObj.gHead.getHeight()];
 
             int pos = 0;
             for (int y = 0; y < dataObj.paddedHeight; y += 8)
