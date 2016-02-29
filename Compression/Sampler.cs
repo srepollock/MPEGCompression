@@ -34,9 +34,9 @@ namespace Compression
                 hHeight = height / 2,
                 hWidth = width / 2;
             byte[,] output = new byte[hWidth, hHeight];
-            for (int y = 0, yy = 0; y < hHeight; y += 2, yy++)
+            for (int y = 0, yy = 0; y < height; y += 2, yy++)
             {
-                for (int x = 0, xx = 0; x < hWidth; x += 2, xx++)
+                for (int x = 0, xx = 0; x < width; x += 2, xx++)
                 {
                     output[xx, yy] = org[x, y];
                 }
