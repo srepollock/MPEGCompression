@@ -14,15 +14,56 @@ namespace Compression
                 width = dataObj.paddedWidth;
             byte[,] output = new byte[width, height];
 
-            for (int yy = 0, y = 0; yy < height / 2; yy++, y += 2)
+            for (int yy = 0, y = 0; y < height; y += 2)
             {
-                for (int xx = 0, x = 0; xx < width / 2; xx++, x += 2)
+                for (int xx = 0, x = 0; x < width; x += 2)
                 {
-                    if ((y + 1) < height / 2)
-                        output[x + 1, y] = output[x + 1, y + 1] = output[x, y + 1] = output[x, y] = org[xx, yy];
-                    else
+                    output[x, y] = org[xx, yy]; // always runs
+                    if(x + 1 != width)
+                    {
                         output[x + 1, y] = org[xx, yy];
+                    }
+                    if(y + 1 != height)
+                    {
+                        output[x, y + 1] = org[xx, yy];
+                    }
+                    if(x + 1 != width && y + 1 != height)
+                    {
+                        output[x + 1, y + 1] = org[xx, yy];
+                    }
+                    xx++;
                 }
+                yy++;
+            }
+            return output;
+        }
+
+        public static double[,] upsample(double[,] org, ref Data dataObj)
+        {
+            int height = dataObj.paddedHeight,
+                width = dataObj.paddedWidth;
+            double[,] output = new double[width, height];
+
+            for (int yy = 0, y = 0; y < height; y += 2)
+            {
+                for (int xx = 0, x = 0; x < width; x += 2)
+                {
+                    output[x, y] = org[xx, yy]; // always runs
+                    if (x + 1 != width)
+                    {
+                        output[x + 1, y] = org[xx, yy];
+                    }
+                    if (y + 1 != height)
+                    {
+                        output[x, y + 1] = org[xx, yy];
+                    }
+                    if (x + 1 != width && y + 1 != height)
+                    {
+                        output[x + 1, y + 1] = org[xx, yy];
+                    }
+                    xx++;
+                }
+                yy++;
             }
             return output;
         }

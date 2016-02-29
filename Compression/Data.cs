@@ -28,9 +28,9 @@ namespace Compression
         public byte[,] yData;
         public byte[,] CbData;
         public byte[,] CrData;
-        double[,] dyData;
-        double[,] dCbData;
-        double[,] dCrData;
+        public double[,] dyData;
+        public double[,] dCbData;
+        public double[,] dCrData;
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;

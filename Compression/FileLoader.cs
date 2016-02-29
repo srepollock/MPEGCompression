@@ -105,8 +105,8 @@ namespace Compression
 
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.cbEncoded = new sbyte[dataObj.gHead.getWidth() * dataObj.gHead.getHeight()];
-            dataObj.crEncoded = new sbyte[dataObj.gHead.getWidth() * dataObj.gHead.getHeight()];
+            dataObj.cbEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
+            dataObj.crEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
 
             int pos = 0;
             for (int y = 0; y < dataObj.paddedHeight; y += 8)
@@ -142,12 +142,14 @@ namespace Compression
             dataObj.setCbData(Sampler.subsample(dataObj.CbData, ref dataObj));
             dataObj.setCrData(Sampler.subsample(dataObj.CrData, ref dataObj));
             pos = 0;
-            for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
+            sz = 0;
+            for (int j = 0; j < dataObj.paddedHeight / 2; j += 8)
             {
-                for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
+                for (int i = 0; i < dataObj.paddedWidth / 2; i += 8)
                 {
+                    sz += 64;
                     // Cb (data is subsampled)
-                    tempCb = block.generate2DBlocks(dataObj.getCbData(), x, y);
+                    tempCb = block.generate2DBlocks(dataObj.getCbData(), i, j);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
                     stempCb = q.quantizeData(tempDCb, dataObj);
@@ -166,10 +168,10 @@ namespace Compression
                     // inverse quantize
                     tempDCb = q.inverseQuantizeData(stempCb, dataObj);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
-                    block.putback(dataObj.getCbData(), tempCb, x, y);
+                    block.putback(dataObj.getCbData(), tempCb, i, j);
 
                     // Cr (data is subsampled)
-                    tempCr = block.generate2DBlocks(dataObj.getCrData(), x, y);
+                    tempCr = block.generate2DBlocks(dataObj.getCrData(), i, j);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
                     stempCr = q.quantizeData(tempDCr, dataObj);
@@ -188,7 +190,7 @@ namespace Compression
                     // inverse quantize
                     tempDCr = q.inverseQuantizeData(stempCr, dataObj);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
-                    block.putback(dataObj.getCrData(), tempCr, x, y);
+                    block.putback(dataObj.getCrData(), tempCr, i, j);
                     pos += 64;
                 }
             }
@@ -370,16 +372,16 @@ namespace Compression
 
             Pad padding = new Pad(ref dataObj);
 
-            dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
+            dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth + ((dataObj.paddedWidth / 2) * (dataObj.paddedHeight / 2) * 2)];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.cbEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
+            dataObj.crEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
             dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setCbData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setCrData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setCbData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setCrData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
             dataObj.setdyData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setdCbData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setdCrData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdCbData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setdCrData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
             // read the data
             readData(re, dataObj.gHead, dataObj.finalData);
             // split the data
@@ -403,7 +405,14 @@ namespace Compression
                     tempDY = q.inverseQuantizeLuma(stempY, dataObj);
                     tempDY = dctObj.dinverseDCT(tempDY);
                     block.putbackd(dataObj.getdyData(), tempDY, x, y);
-
+                    pos += 64;
+                }
+            }
+            pos = 0;
+            for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
+                {
                     // Cb
                     // block
                     tempCb = block.generateBlocks(dataObj.cbEncoded, pos);
@@ -429,6 +438,9 @@ namespace Compression
             re.Close();
             // set pixels
 
+            dataObj.setdCbData(Sampler.upsample(dataObj.dCbData, ref dataObj));
+            dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
+
             dataChanger.sYCbCrtoRGB(
                 ref dataObj
                 );
@@ -451,7 +463,11 @@ namespace Compression
 
         private void writeData(BinaryWriter file, sbyte[] data)
         {
-            for(int i = 0; i < dataObj.paddedHeight * dataObj.paddedWidth * 3; i++)
+            int padded = dataObj.paddedHeight * dataObj.paddedWidth,
+                hpaddedtwo = ((dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2) * 2);
+            for (int i = 0; i < padded; i++)
+                file.Write(data[i]);
+            for (int i = padded; i < padded + hpaddedtwo; i++)
                 file.Write(data[i]);
         }
 
@@ -462,12 +478,19 @@ namespace Compression
             header.setQuality(file.ReadByte());
         }
 
-        private void readData(BinaryReader file, Header head, sbyte[] data)
+        private void readData(BinaryReader file, Header header, sbyte[] data)
         {
-            int i = 0;
-            while(i < head.getHeight() * head.getWidth() * 3)
+            int i = 0, j = 0;
+            Pad p = new Pad(ref dataObj);
+
+            while(i < dataObj.paddedHeight * dataObj.paddedWidth)
             {
                 data[i++] = file.ReadSByte();
+            }
+            while(j < ((dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2) * 2))
+            {
+                data[i++] = file.ReadSByte();
+                j++;
             }
         }
     }
