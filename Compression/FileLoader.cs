@@ -199,9 +199,9 @@ namespace Compression
             dataObj.cbEncoded = RLE.rle(dataObj.cbEncoded);
             dataObj.crEncoded = RLE.rle(dataObj.crEncoded);
             // set the header information
-            dataObj.gHead.setYlen((short)dataObj.yEncoded.Length);
-            dataObj.gHead.setCblen((short)dataObj.cbEncoded.Length);
-            dataObj.gHead.setCrlen((short)dataObj.crEncoded.Length);
+            dataObj.gHead.setYlen(dataObj.yEncoded.Length);
+            dataObj.gHead.setCblen(dataObj.cbEncoded.Length);
+            dataObj.gHead.setCrlen(dataObj.crEncoded.Length);
             // update the RGBChanger data to what we have in the dataObj
             setFinalData();
 
@@ -493,9 +493,9 @@ namespace Compression
         {
             header.setHeight(file.ReadInt16());
             header.setWidth(file.ReadInt16());
-            header.setYlen(file.ReadInt16());
-            header.setCblen(file.ReadInt16());
-            header.setCrlen(file.ReadInt16());
+            header.setYlen(file.ReadInt32());
+            header.setCblen(file.ReadInt32());
+            header.setCrlen(file.ReadInt32());
             header.setQuality(file.ReadByte());
         }
 

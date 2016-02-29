@@ -31,6 +31,12 @@ namespace Compression
                 if(s == data[i])
                 {
                     count++;
+                    if(i + 1 == data.Length)
+                    {
+                        Array.Resize<sbyte>(ref output, output.Length + 2);
+                        output[pos] = count;
+                        output[pos + 1] = s;
+                    }
                 }
                 else
                 {
