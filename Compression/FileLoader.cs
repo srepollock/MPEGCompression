@@ -194,6 +194,14 @@ namespace Compression
                     pos += 64;
                 }
             }
+            // rle the data
+            dataObj.yEncoded = RLE.rle(dataObj.yEncoded);
+            dataObj.cbEncoded = RLE.rle(dataObj.cbEncoded);
+            dataObj.crEncoded = RLE.rle(dataObj.crEncoded);
+            // set the header information
+            dataObj.gHead.setYlen((short)dataObj.yEncoded.Length);
+            dataObj.gHead.setCblen((short)dataObj.cbEncoded.Length);
+            dataObj.gHead.setCrlen((short)dataObj.crEncoded.Length);
             // update the RGBChanger data to what we have in the dataObj
             setFinalData();
 
@@ -357,8 +365,9 @@ namespace Compression
             FileStream fs = new FileStream(fileName, FileMode.Create);
             BinaryWriter wr = new BinaryWriter(fs);
             // setup the header information
+                // height, width, ylen, cblen, crlen, quality
             writeData(wr, dataObj.gHead);
-            writeData(wr, dataObj.finalData);
+            writeData(wr, dataObj.gHead, dataObj.finalData);
             wr.Close();
             fs.Close();
         }
@@ -372,10 +381,10 @@ namespace Compression
 
             Pad padding = new Pad(ref dataObj);
 
-            dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth + ((dataObj.paddedWidth / 2) * (dataObj.paddedHeight / 2) * 2)];
-            dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.cbEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
-            dataObj.crEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
+            dataObj.finalData = new sbyte[dataObj.gHead.getYlen() + dataObj.gHead.getCblen() + dataObj.gHead.getCrlen()];
+            dataObj.yEncoded = new sbyte[dataObj.gHead.getYlen()];
+            dataObj.cbEncoded = new sbyte[dataObj.gHead.getCblen()];
+            dataObj.crEncoded = new sbyte[dataObj.gHead.getCrlen()];
             dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
             dataObj.setCbData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
             dataObj.setCrData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
@@ -386,6 +395,11 @@ namespace Compression
             readData(re, dataObj.gHead, dataObj.finalData);
             // split the data
             splitFinalData();
+            // unrle the data
+            dataObj.yEncoded = RLE.unrle(dataObj.yEncoded);
+            dataObj.cbEncoded = RLE.unrle(dataObj.cbEncoded);
+            dataObj.crEncoded = RLE.unrle(dataObj.crEncoded);
+
 
             sbyte[] tempY, tempCb, tempCr;
             sbyte[,] stempY, stempCb, stempCr;
@@ -458,39 +472,50 @@ namespace Compression
         {
             file.Write(header.getHeight());
             file.Write(header.getWidth());
+            file.Write(header.getYlen());
+            file.Write(header.getCblen());
+            file.Write(header.getCrlen());
             file.Write(header.getQuality());
         }
 
-        private void writeData(BinaryWriter file, sbyte[] data)
+        private void writeData(BinaryWriter file, Header header, sbyte[] data)
         {
-            int padded = dataObj.paddedHeight * dataObj.paddedWidth,
-                hpaddedtwo = ((dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2) * 2);
-            for (int i = 0; i < padded; i++)
-                file.Write(data[i]);
-            for (int i = padded; i < padded + hpaddedtwo; i++)
-                file.Write(data[i]);
+            int c = 0;
+            for (int i = 0; i < header.getYlen(); i++)
+                file.Write(data[c++]);
+            for (int i = 0; i < header.getCblen(); i++)
+                file.Write(data[c++]);
+            for (int i = 0; i < header.getCrlen(); i++)
+                file.Write(data[c++]);
         }
 
         private void readData(BinaryReader file, Header header)
         {
             header.setHeight(file.ReadInt16());
             header.setWidth(file.ReadInt16());
+            header.setYlen(file.ReadInt16());
+            header.setCblen(file.ReadInt16());
+            header.setCrlen(file.ReadInt16());
             header.setQuality(file.ReadByte());
         }
 
         private void readData(BinaryReader file, Header header, sbyte[] data)
         {
-            int i = 0, j = 0;
+            
             Pad p = new Pad(ref dataObj);
 
-            while(i < dataObj.paddedHeight * dataObj.paddedWidth)
+            int c = 0;
+            for(int i = 0; i < header.getYlen(); i++)
             {
-                data[i++] = file.ReadSByte();
+                data[c++] = file.ReadSByte();
             }
-            while(j < ((dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2) * 2))
+            for (int j = 0; j < header.getCblen(); j++)
             {
-                data[i++] = file.ReadSByte();
-                j++;
+                data[c++] = file.ReadSByte();
+            }
+            for (int k = 0; k < header.getCrlen(); k++)
+            {
+                data[c++] = file.ReadSByte();
             }
         }
     }
