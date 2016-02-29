@@ -80,12 +80,12 @@ namespace Compression
 
         }
 
-        public Bitmap getYBitmap(Image org)
+        public Bitmap getYBitmap(Header header)
         {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
+            Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
+            for (int y = 0; y < header.getHeight(); y++)
             {
-                for (int x = 0; x < org.Width; x++)
+                for (int x = 0; x < header.getWidth(); x++)
                 {
                     //outBmp.SetPixel(x, y, Color.FromArgb(yData[x,y]/3, yData[x, y] / 3, yData[x, y] / 3));
                     outBmp.SetPixel(x, y, Color.FromArgb(yData[x, y], yData[x, y], yData[x, y]));
@@ -95,12 +95,12 @@ namespace Compression
             return outBmp;
         }
 
-        public Bitmap getCrBitmap(Image org)
+        public Bitmap getCrBitmap(Header header)
         {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
+            Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
+            for (int y = 0; y < header.getHeight(); y++)
             {
-                for (int x = 0; x < org.Width; x++)
+                for (int x = 0; x < header.getWidth(); x++)
                 {
                     //outBmp.SetPixel(x, y, Color.FromArgb(CrData[x, y] / 3, CrData[x, y] / 3, CrData[x, y] / 3));
                     outBmp.SetPixel(x, y, Color.FromArgb(CrData[x, y], CrData[x, y], CrData[x, y]));
@@ -110,12 +110,12 @@ namespace Compression
             return outBmp;
         }
 
-        public Bitmap getCbBitmap(Image org)
+        public Bitmap getCbBitmap(Header header)
         {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
+            Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
+            for (int y = 0; y < header.getHeight(); y++)
             {
-                for (int x = 0; x < org.Width; x++)
+                for (int x = 0; x < header.getWidth(); x++)
                 {
                     //outBmp.SetPixel(x, y, Color.FromArgb(CbData[x, y] / 3, CbData[x, y] / 3, CbData[x, y] / 3));
                     outBmp.SetPixel(x, y, Color.FromArgb(CbData[x, y], CbData[x, y], CbData[x, y]));
@@ -125,14 +125,13 @@ namespace Compression
             return outBmp;
         }
 
-        public Bitmap getYCbCrBitmap(Image org)
+        public Bitmap getYCbCrBitmap(Header header)
         {
-            Bitmap outBmp = new Bitmap(org.Width, org.Height);
-            for (int y = 0; y < org.Height; y++)
+            Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
+            for (int y = 0; y < header.getHeight(); y++)
             {
-                for (int x = 0; x < org.Width; x++)
+                for (int x = 0; x < header.getWidth(); x++)
                 {
-                    //outBmp.SetPixel(x, y, Color.FromArgb(CbData[x, y] / 3, CbData[x, y] / 3, CbData[x, y] / 3));
                     outBmp.SetPixel(x, y, YCbCrData[x, y]);
                 }
             }
