@@ -125,6 +125,7 @@ namespace Compression
             showYCbCrButton.Enabled = false;
             saveToolStripMenuItem.Enabled = false;
             fileNameBox.Text = null;
+            dataObj = new Data();
         }
         /// <summary>
         /// RGBChangeButton

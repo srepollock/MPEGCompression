@@ -161,7 +161,7 @@ namespace Compression
                     {
                         if (flag || y == 1) x++;
                         else y += 2;
-                        result[x, y--] = data[++i];
+                        result[x, --y] = data[++i];
                         if (!flag) flag = true;
                     }
                     x++; y = 0; i++;
