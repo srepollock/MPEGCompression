@@ -25,12 +25,12 @@ namespace Compression
         /*
             Image byte data
         */
-        byte[,] yData;
-        byte[,] CbData;
-        byte[,] CrData;
-        double[,] dyData;
-        double[,] dCbData;
-        double[,] dCrData;
+        public byte[,] yData;
+        public byte[,] CbData;
+        public byte[,] CrData;
+        public double[,] dyData;
+        public double[,] dCbData;
+        public double[,] dCrData;
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;
@@ -139,6 +139,19 @@ namespace Compression
 
             return outBmp;
         }
+
+        public Bitmap generateBitmap() {
+            Bitmap outBmp = new Bitmap(gHead.getWidth(), gHead.getHeight()); 
+            for (int y = 0; y < gHead.getHeight(); y++) 
+            { 
+                for (int x = 0; x < gHead.getWidth(); x++) 
+                { 
+                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x,y], gData[x,y], bData[x,y])); 
+                }
+            }
+            return outBmp;
+        }
+
         /*
             Getters
         */

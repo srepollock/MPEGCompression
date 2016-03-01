@@ -19,6 +19,9 @@ namespace Compression
         Data dataObj;
         RGBChanger dataChanger;
         DCT dctObj;
+        ZigZag zz;
+        Blocks block;
+        Quantize q;
 
         public FileLoader()
         {
@@ -26,6 +29,9 @@ namespace Compression
             dataObj = new Data(); // sets up the data object to us methods
             dctObj = new DCT();
             dataChanger = new RGBChanger();
+            zz = new ZigZag();
+            block = new Blocks();
+            q = new Quantize();
             rgbChangeButton.Enabled = false;
             ShowYButton.Enabled = false;
             showCbButton.Enabled = false;
@@ -79,49 +85,28 @@ namespace Compression
 
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
-            int padW = 0,
-                padH = 0,
-                sz = 0;
+            int sz = 0;
             byte[,] tempY, tempCb, tempCr;
             sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
             sbyte[] szztempY, szztempB, szztempR;
             /* This data needs to be saved for the header information */
 
-            dataObj.setRGBtoYCrCb(
-                dataChanger.RGBtoYCbCr(
-                    dataObj.getOriginal()
-                    )); // This will set the data changed bitmap to that of the returned bitmap from the data changer
-            updateYCrCbDataObject();
+            Pad padding = new Pad(ref dataObj);
 
-            // This will be run on Cb and Cr data
-            // run dct and quantize here. We pass in 8x8's
-            // update offset by incrementing by 8 each time
-            // generate 8x8 blocks
+            dataChanger.RGBtoYCbCr(
+                dataObj.getOriginal(), ref dataObj
+                ); // This will set the data changed bitmap to that of the returned bitmap from the data changer
 
-            // check if the size is divisible by 8, if not pad
-            int modH = dataObj.gHead.getHeight() % 8, 
-                modW = dataObj.gHead.getWidth() % 8; // array is 1 # less for each
-            if(modW != 0 || modH != 0)
-            {
-                padW = (8 - modW == 8) ? 0 : 8 - modW;
-                padH = (8 - modH == 8) ? 0 : 8 - modH;
-                dataObj.paddedWidth = dataObj.gHead.getWidth() + padW;
-                dataObj.paddedHeight = dataObj.gHead.getHeight() + padH;
-                dataObj.setyData(padData(dataObj.getyData(), padW, padH));
-                dataObj.setCbData(padData(dataObj.getCbData(), padW, padH));
-                dataObj.setCrData(padData(dataObj.getCrData(), padW, padH));
-            }
-            else
-            {
-                dataObj.paddedWidth = dataObj.gHead.getWidth();
-                dataObj.paddedHeight = dataObj.gHead.getHeight();
-            }
+            // pad data
+            dataObj.setyData(padData(dataObj.getyData(), padding.padW, padding.padH));
+            dataObj.setCbData(padData(dataObj.getCbData(), padding.padW, padding.padH));
+            dataObj.setCrData(padData(dataObj.getCrData(), padding.padW, padding.padH));
 
             dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
             dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.cbEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
+            dataObj.crEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
 
             int pos = 0;
             for (int y = 0; y < dataObj.paddedHeight; y += 8)
@@ -131,12 +116,12 @@ namespace Compression
                     sz += 64;
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
                     // Y
-                    tempY = generateBlocks(dataObj.getyData(), x, y);
+                    tempY = block.generate2DBlocks(dataObj.getyData(), x, y);
                     tempDY = dctObj.forwardDCT(tempY);
                     // quantize
-                    stempY = quantizeLuma(tempDY);
+                    stempY = q.quantizeLuma(tempDY, dataObj);
                     // zigzag
-                    szztempY = zigzag(stempY);
+                    szztempY = zz.zigzag(stempY);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.yEncoded, sz);
@@ -146,19 +131,30 @@ namespace Compression
                     // unrle
 
                     // unzigzag
-                    stempY = unzigzag(szztempY);
+                    stempY = zz.unzigzag(szztempY);
                     // inverse quantize
-                    tempDY = inverseQuantizeLuma(stempY);
+                    tempDY = q.inverseQuantizeLuma(stempY, dataObj);
                     tempY = dctObj.inverseDCTByte(tempDY);
-                    putback(dataObj.getyData(), tempY, x, y);
-                    
-                    // Cb
-                    tempCb = generateBlocks(dataObj.getCbData(), x, y);
+                    block.putback(dataObj.getyData(), tempY, x, y);
+                    pos += 64;
+                }
+            }
+            dataObj.setCbData(Sampler.subsample(dataObj.CbData, ref dataObj));
+            dataObj.setCrData(Sampler.subsample(dataObj.CrData, ref dataObj));
+            pos = 0;
+            sz = 0;
+            for (int j = 0; j < dataObj.paddedHeight / 2; j += 8)
+            {
+                for (int i = 0; i < dataObj.paddedWidth / 2; i += 8)
+                {
+                    sz += 64;
+                    // Cb (data is subsampled)
+                    tempCb = block.generate2DBlocks(dataObj.getCbData(), i, j);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
-                    stempCb = quantizeData(tempDCb);
+                    stempCb = q.quantizeData(tempDCb, dataObj);
                     // zigzag
-                    szztempB = zigzag(stempCb);
+                    szztempB = zz.zigzag(stempCb);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.cbEncoded, sz);
@@ -168,19 +164,19 @@ namespace Compression
                     // unrle
 
                     // unzigzag
-                    stempCb = unzigzag(szztempB);
+                    stempCb = zz.unzigzag(szztempB);
                     // inverse quantize
-                    tempDCb = inverseQuantizeData(stempCb);
+                    tempDCb = q.inverseQuantizeData(stempCb, dataObj);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
-                    putback(dataObj.getCbData(), tempCb, x, y);
-                    
-                    // Cr
-                    tempCr = generateBlocks(dataObj.getCrData(), x, y);
+                    block.putback(dataObj.getCbData(), tempCb, i, j);
+
+                    // Cr (data is subsampled)
+                    tempCr = block.generate2DBlocks(dataObj.getCrData(), i, j);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
-                    stempCr = quantizeData(tempDCr);
+                    stempCr = q.quantizeData(tempDCr, dataObj);
                     // zigzag
-                    szztempR = zigzag(stempCr);
+                    szztempR = zz.zigzag(stempCr);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.crEncoded, sz);
@@ -190,23 +186,30 @@ namespace Compression
                     // unrle
 
                     // unzigzag
-                    stempCr = unzigzag(szztempR);
+                    stempCr = zz.unzigzag(szztempR);
                     // inverse quantize
-                    tempDCr = inverseQuantizeData(stempCr);
+                    tempDCr = q.inverseQuantizeData(stempCr, dataObj);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
-                    putback(dataObj.getCrData(), tempCr, x, y);
+                    block.putback(dataObj.getCrData(), tempCr, i, j);
                     pos += 64;
                 }
             }
+            // rle the data
+            dataObj.yEncoded = RLE.rle(dataObj.yEncoded);
+            dataObj.cbEncoded = RLE.rle(dataObj.cbEncoded);
+            dataObj.crEncoded = RLE.rle(dataObj.crEncoded);
+            // set the header information
+            dataObj.gHead.setYlen(dataObj.yEncoded.Length);
+            dataObj.gHead.setCblen(dataObj.cbEncoded.Length);
+            dataObj.gHead.setCrlen(dataObj.crEncoded.Length);
             // update the RGBChanger data to what we have in the dataObj
-            updateRGBChangerYCrCBData();
             setFinalData();
 
-            dataObj.setYCrCbtoRGB(
-                dataChanger.YCbCrtoRGB(
-                    dataObj.getRGBtoYCrCb()
-                    ));
-            updateRGBDataObject();
+            // upsample data
+            dataObj.setCbData(Sampler.upsample(dataObj.getCbData(), ref dataObj));
+            dataObj.setCrData(Sampler.upsample(dataObj.getCrData(), ref dataObj));
+
+            dataChanger.YCbCrtoRGB(ref dataObj);
             dataChanger = new RGBChanger();
 
             ShowYButton.Enabled = true;
@@ -214,7 +217,7 @@ namespace Compression
             ShowCrButton.Enabled = true;
             showYCbCrButton.Enabled = true;
             saveToolStripMenuItem.Enabled = true;
-            pictureBox2.Image = dataObj.getYCrCbtoRGB();
+            pictureBox2.Image = dataObj.generateBitmap();
         }
 
         private void setFinalData()
@@ -255,13 +258,13 @@ namespace Compression
 
         private byte[,] padData(byte[,] data, int padxby, int padyby)
         {
-            int width = dataObj.getOriginal().Width, height = dataObj.getOriginal().Height;
+            int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
             byte[,] temp = new byte[width + padxby, height + padyby];
             for (int y = 0; y < height + padyby; y++)
             {
-                for(int x = 0; x < width + padxby; x++)
+                for (int x = 0; x < width + padxby; x++)
                 {
-                    if(x >= width && y >= height)
+                    if (x >= width && y >= height)
                     {
                         temp[x, y] = 0;
                     }
@@ -282,11 +285,42 @@ namespace Compression
             return temp;
         }
 
+        private byte[,] cpadData(byte[,] data, int padxby, int padyby)
+        {
+            int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
+            byte[,] temp = new byte[(width + padxby) / 2, (height + padyby) / 2];
+            for (int y = 0; y < (height + padyby) / 2; y++)
+            {
+                for (int x = 0; x < (width + padxby) / 2; x++)
+                {
+                    if (x >= width / 2 && y >= height / 2)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (x >= width / 2)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (y >= height / 2)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else
+                    {
+                        temp[x, y] = data[x, y];
+                    }
+                }
+            }
+            return temp;
+        }
+        /*
         private void updateYCrCbDataObject()
         {
             dataObj.setyData(dataChanger.getyData());
-            dataObj.setCbData(dataChanger.getCbData());
-            dataObj.setCrData(dataChanger.getCrData());
+            // subsample data
+            dataObj.setCbData(Sampler.subsample(dataChanger.getCbData(), dataObj));
+            dataObj.setCrData(Sampler.subsample(dataChanger.getCrData(), dataObj));
+
             dataObj.setYCrCbData(dataChanger.getYCrCbData());
         }
 
@@ -296,69 +330,14 @@ namespace Compression
             dataChanger.setCbData(dataObj.getCbData());
             dataChanger.setCrData(dataObj.getCrData());
         }
-
+        
         private void updateRGBDataObject()
         {
             dataObj.setrData(dataChanger.getrData());
             dataObj.setgData(dataChanger.getgData());
             dataObj.setbData(dataChanger.getbData());
         }
-
-        private byte[,] generateBlocks(byte[,] data, int offsetx, int offsety)
-        {
-            byte[,] output = new byte[8, 8];
-            for (int y = 0; y < 8; y++) {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = data[offsetx + x, offsety + y];
-                }
-            }
-            return output;
-        }
-
-        private sbyte[] generateBlocks(sbyte[] data, int offsetx, int offsety)
-        {
-            sbyte[] output = new sbyte[8 * 8];
-            for (int i = 0; i < 64; i++)
-            {
-                output[i] = data[i + offsetx * offsety];
-            }
-            return output;
-        }
-
-        private void putback(byte[,] original, byte[,] data, int offsetx, int offsety)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    original[offsetx + x, offsety + y] = data[x, y];
-                }
-            }
-        }
-
-        private void putbacks(sbyte[,] original, sbyte[,] data, int offsetx, int offsety)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    original[offsetx + x, offsety + y] = data[x, y];
-                }
-            }
-        }
-
-        private void putbackd(double[,] original, double[,] data, int offsetx, int offsety)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    original[offsetx + x, offsety + y] = data[x, y];
-                }
-            }
-        }
-
+        */
         private void ShowYButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getYBitmap(pictureBox1.Image);
@@ -379,214 +358,6 @@ namespace Compression
             pictureBox3.Image = dataObj.getRGBtoYCrCb();
         }
 
-        private sbyte[,] quantizeData(double[,] data)
-        {
-            sbyte[,] output = new sbyte[8,8];
-            for(int y = 0; y < 8; y++)
-            {
-                for(int x = 0; x < 8; x++)
-                {
-                    output[x, y] = Convert.ToSByte(Math.Round(data[x, y] / dataObj.chrominance[x, y]));
-                }
-            }
-            return output;
-        }
-
-        private double[,] inverseQuantizeData(sbyte[,] data)
-        {
-            double[,] output = new double[8, 8];
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = (data[x, y] * dataObj.chrominance[x, y]);
-                }
-            }
-            return output;
-        }
-
-        private sbyte[,] quantizeLuma(double[,] data)
-        {
-            sbyte[,] output = new sbyte[8, 8];
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = Convert.ToSByte(Math.Round((double)(data[x, y] / dataObj.luminance[x, y])));
-                }
-            }
-            return output;
-        }
-
-        private double[,] inverseQuantizeLuma(sbyte[,] data)
-        {
-            double[,] output = new double[8, 8];
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    output[x, y] = data[x, y] * dataObj.luminance[x, y];
-                }
-            }
-            return output;
-        }
-
-        private sbyte[] zigzag(sbyte[,] data)
-        {
-            // testing
-            /*
-            byte[,] data = new byte[,]
-            {
-                {0,1,5,6,14,15,27,28 },
-                {2,4,7,13,16,26,29,42 },
-                {3,8,12,17,25,30,41,43 },
-                {9,11,18,24,31,40,44,53 },
-                {10,19,23,32,39,45,52,54 },
-                {20,22,33,38,46,51,55,60 },
-                {21,34,37,47,50,56,59,61 },
-                {35,36,48,49,57,58,62,63 }
-            };
-            */
-            sbyte[] result = new sbyte[8 * 8];
-
-            int i = 0,
-                x = 0,
-                y = 0,
-                d = 0; // -1 for the to-right move, +1 for the bottom-left move
-            bool flag = false;
-            bool reverseFlag = false;
-
-            do
-            {
-                flag = false;
-                if (x > 7 || reverseFlag)
-                {
-                    d++;
-                    y = d;
-                    reverseFlag = true;
-                    if(x > 7) x--;
-                    result[i] = data[x, y];
-                    while (x != d)
-                    {
-                        result[++i] = data[--x, ++y];
-                    }
-                    if(++d > 7) break;
-                    x = d;
-                    result[++i] = data[x, y];
-                    while (y != d)
-                    {
-                        result[++i] = data[++x, --y];
-                    }
-                    i++;
-                }
-                else
-                {
-                    result[i] = data[x, y];
-                    if (i == 0) x++;
-                    while (x != 0)
-                    {
-                        result[++i] = data[--x, ++y];
-                    }
-                    while (y != 0)
-                    {
-                        if (flag || y == 1) x++;
-                        else  y += 2;
-                        result[++i] = data[x, --y];
-                        if (!flag) flag = true;
-                    }
-                    x++; y = 0; i++;
-                }
-            } while (i < 64);
-
-            result[63] = data[7, 7];
-
-            return result;
-        }
-
-        private sbyte[,] unzigzag(sbyte[] data)
-        {
-            // testing
-            /*
-            byte[,] data = new byte[,]
-            {
-                {0,1,5,6,14,15,27,28 },
-                {2,4,7,13,16,26,29,42 },
-                {3,8,12,17,25,30,41,43 },
-                {9,11,18,24,31,40,44,53 },
-                {10,19,23,32,39,45,52,54 },
-                {20,22,33,38,46,51,55,60 },
-                {21,34,37,47,50,56,59,61 },
-                {35,36,48,49,57,58,62,63 }
-            };
-            */
-            sbyte[,] result = new sbyte[8, 8];
-
-            int i = 0,
-                x = 0,
-                y = 0,
-                d = 0; // -1 for the to-right move, +1 for the bottom-left move
-            bool flag = false;
-            bool reverseFlag = false;
-
-            do
-            {
-                flag = false;
-                if (x >= 8 || reverseFlag)
-                {
-                    d++;
-                    y = d;
-                    reverseFlag = true;
-                    if (x >= 8)
-                        x--;
-                    result[x,y] = data[i];
-                    while (x != d)
-                    {
-                        result[--x, ++y] = data[++i];
-                    }
-                    if (++d > 7) break;
-                    x = d;
-                    result[x, y] = data[++i];
-                    while (y != d)
-                    {
-                        result[++x, --y] = data[++i];
-                    }
-                    i++;
-                }
-                else
-                {
-                    result[x, y] = data[i];
-                    if (i == 0)
-                        x++;
-                    while (x != 0)
-                    {
-                        i++;
-                        x--;
-                        y++;
-                        result[x, y] = data[i];
-                    }
-                    while (y != 0)
-                    {
-                        i++;
-                        if (flag || y == 1)
-                            x++;
-                        else
-                            y += 2;
-                        y--;
-                        result[x, y] = data[i];
-                        if (!flag)
-                            flag = true;
-                    }
-                    x++;
-                    y = 0;
-                    i++;
-                }
-            } while (i < 64);
-
-            result[7, 7] = data[63];
-
-            return result;
-        }
-
         public void saveFile(string fileName)
         {
             if (pictureBox2.Image == null) return;
@@ -594,8 +365,9 @@ namespace Compression
             FileStream fs = new FileStream(fileName, FileMode.Create);
             BinaryWriter wr = new BinaryWriter(fs);
             // setup the header information
+                // height, width, ylen, cblen, crlen, quality
             writeData(wr, dataObj.gHead);
-            writeData(wr, dataObj.finalData);
+            writeData(wr, dataObj.gHead, dataObj.finalData);
             wr.Close();
             fs.Close();
         }
@@ -606,41 +378,33 @@ namespace Compression
             BinaryReader re = new BinaryReader(File.OpenRead(fileName));
             // setup the header information
             readData(re, dataObj.gHead);
-            dataObj.setRGBtoYCrCb(new Bitmap(dataObj.gHead.getWidth(), dataObj.gHead.getHeight()));
-            int modH = dataObj.gHead.getHeight() % 8,
-                modW = dataObj.gHead.getWidth() % 8, // array is 1 # less for each
-                padW = 0,
-                padH = 0;
-            if (modW != 0 || modH != 0)
-            {
-                padW = (8 - modW == 8) ? 0 : 8 - modW;
-                padH = (8 - modH == 8) ? 0 : 8 - modH;
-                dataObj.paddedWidth = dataObj.gHead.getWidth() + padW;
-                dataObj.paddedHeight = dataObj.gHead.getHeight() + padH;
-            }
-            else
-            {
-                dataObj.paddedWidth = dataObj.gHead.getWidth();
-                dataObj.paddedHeight = dataObj.gHead.getHeight();
-            }
-            dataObj.finalData = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth * 3];
-            dataObj.yEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.cbEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.crEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+
+            Pad padding = new Pad(ref dataObj);
+
+            dataObj.finalData = new sbyte[dataObj.gHead.getYlen() + dataObj.gHead.getCblen() + dataObj.gHead.getCrlen()];
+            dataObj.yEncoded = new sbyte[dataObj.gHead.getYlen()];
+            dataObj.cbEncoded = new sbyte[dataObj.gHead.getCblen()];
+            dataObj.crEncoded = new sbyte[dataObj.gHead.getCrlen()];
             dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setCbData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setCrData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setCbData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setCrData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
             dataObj.setdyData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setdCbData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
-            dataObj.setdCrData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdCbData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setdCrData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            // read the data
             readData(re, dataObj.gHead, dataObj.finalData);
             // split the data
             splitFinalData();
+            // unrle the data
+            dataObj.yEncoded = RLE.unrle(dataObj.yEncoded);
+            dataObj.cbEncoded = RLE.unrle(dataObj.cbEncoded);
+            dataObj.crEncoded = RLE.unrle(dataObj.crEncoded);
+
 
             sbyte[] tempY, tempCb, tempCr;
-            byte[,] btempY, btempCb, btempCr;
             sbyte[,] stempY, stempCb, stempCr;
             double[,] tempDY, tempDCb, tempDCr;
+            int pos = 0;
             for (int y = 0; y < dataObj.paddedHeight; y += 8)
             {
                 for (int x = 0; x < dataObj.paddedWidth; x += 8)
@@ -648,43 +412,52 @@ namespace Compression
                     // DCT, Quantize, ZigZag and RLE
                     // Y
                     // block
-                    tempY = generateBlocks(dataObj.yEncoded, x, y);
+                    tempY = block.generateBlocks(dataObj.yEncoded, pos); // put in x, y here for cool spirals
                     // unzigzag
-                    stempY = unzigzag(tempY);
+                    stempY = zz.unzigzag(tempY);
                     // inverse quantize
-                    tempDY = inverseQuantizeLuma(stempY);
+                    tempDY = q.inverseQuantizeLuma(stempY, dataObj);
                     tempDY = dctObj.dinverseDCT(tempDY);
-                    putbackd(dataObj.getdyData(), tempDY, x, y);
-
+                    block.putbackd(dataObj.getdyData(), tempDY, x, y);
+                    pos += 64;
+                }
+            }
+            pos = 0;
+            for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
+                {
                     // Cb
                     // block
-                    tempCb = generateBlocks(dataObj.cbEncoded, x, y);
+                    tempCb = block.generateBlocks(dataObj.cbEncoded, pos);
                     // unzigzag
-                    stempCb = unzigzag(tempCb);
+                    stempCb = zz.unzigzag(tempCb);
                     // inverse quantize
-                    tempDCb = inverseQuantizeData(stempCb);
+                    tempDCb = q.inverseQuantizeData(stempCb, dataObj);
                     tempDCb = dctObj.dinverseDCT(tempDCb);
-                    putbackd(dataObj.getdCbData(), tempDCb, x, y);
+                    block.putbackd(dataObj.getdCbData(), tempDCb, x, y);
 
                     // Cr
                     // block
-                    tempCr = generateBlocks(dataObj.crEncoded, x, y);
+                    tempCr = block.generateBlocks(dataObj.crEncoded, pos);
                     // unzigzag
-                    stempCr = unzigzag(tempCr);
+                    stempCr = zz.unzigzag(tempCr);
                     // inverse quantize
-                    tempDCr = inverseQuantizeData(stempCr);
+                    tempDCr = q.inverseQuantizeData(stempCr, dataObj);
                     tempDCr = dctObj.dinverseDCT(tempDCr);
-                    putbackd(dataObj.getdCrData(), tempDCr, x, y);
+                    block.putbackd(dataObj.getdCrData(), tempDCr, x, y);
+                    pos += 64;
                 }
             }
             re.Close();
             // set pixels
 
-            dataObj.setYCrCbtoRGB(
-                dataChanger.sYCbCrtoRGB(
-                    dataObj
-                    ));
-            updateRGBDataObject();
+            dataObj.setdCbData(Sampler.upsample(dataObj.dCbData, ref dataObj));
+            dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
+
+            dataChanger.sYCbCrtoRGB(
+                ref dataObj
+                );
             dataChanger = new RGBChanger();
 
             ShowYButton.Enabled = true;
@@ -692,35 +465,57 @@ namespace Compression
             ShowCrButton.Enabled = true;
             showYCbCrButton.Enabled = true;
             saveToolStripMenuItem.Enabled = true;
-            pictureBox2.Image = dataObj.getYCrCbtoRGB();
+            pictureBox2.Image = dataObj.generateBitmap();
         }
 
         private void writeData(BinaryWriter file, Header header)
         {
             file.Write(header.getHeight());
             file.Write(header.getWidth());
+            file.Write(header.getYlen());
+            file.Write(header.getCblen());
+            file.Write(header.getCrlen());
             file.Write(header.getQuality());
         }
 
-        private void writeData(BinaryWriter file, sbyte[] data)
+        private void writeData(BinaryWriter file, Header header, sbyte[] data)
         {
-            for(int i = 0; i < dataObj.paddedHeight * dataObj.paddedWidth * 3; i++)
-                file.Write(data[i]);
+            int c = 0;
+            for (int i = 0; i < header.getYlen(); i++)
+                file.Write(data[c++]);
+            for (int i = 0; i < header.getCblen(); i++)
+                file.Write(data[c++]);
+            for (int i = 0; i < header.getCrlen(); i++)
+                file.Write(data[c++]);
         }
 
         private void readData(BinaryReader file, Header header)
         {
             header.setHeight(file.ReadInt16());
             header.setWidth(file.ReadInt16());
+            header.setYlen(file.ReadInt32());
+            header.setCblen(file.ReadInt32());
+            header.setCrlen(file.ReadInt32());
             header.setQuality(file.ReadByte());
         }
 
-        private void readData(BinaryReader file, Header head, sbyte[] data)
+        private void readData(BinaryReader file, Header header, sbyte[] data)
         {
-            int i = 0;
-            while(i < head.getHeight() * head.getWidth() * 3)
+            
+            Pad p = new Pad(ref dataObj);
+
+            int c = 0;
+            for(int i = 0; i < header.getYlen(); i++)
             {
-                data[i++] = file.ReadSByte();
+                data[c++] = file.ReadSByte();
+            }
+            for (int j = 0; j < header.getCblen(); j++)
+            {
+                data[c++] = file.ReadSByte();
+            }
+            for (int k = 0; k < header.getCrlen(); k++)
+            {
+                data[c++] = file.ReadSByte();
             }
         }
     }

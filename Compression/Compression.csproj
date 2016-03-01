@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Blocks.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="DCT.cs" />
     <Compile Include="FileLoader.cs">
@@ -56,9 +57,14 @@
       <DependentUpon>FileLoader.cs</DependentUpon>
     </Compile>
     <Compile Include="Header.cs" />
+    <Compile Include="Pad.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Quantize.cs" />
     <Compile Include="RGBChanger.cs" />
+    <Compile Include="RLE.cs" />
+    <Compile Include="Sampler.cs" />
+    <Compile Include="ZigZag.cs" />
     <EmbeddedResource Include="FileLoader.resx">
       <DependentUpon>FileLoader.cs</DependentUpon>
     </EmbeddedResource>
