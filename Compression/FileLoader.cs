@@ -62,13 +62,12 @@ namespace Compression
                     dataObj.gHead.setWidth((short)dataObj.getOriginal().Width);
                     dataObj.gHead.setQuality(1);
                     pictureBox2.Image = null;
+                    rgbChangeButton.Enabled = true;
                 }
-                rgbChangeButton.Enabled = true;
                 ShowYButton.Enabled = false;
                 showCbButton.Enabled = false;
                 ShowCrButton.Enabled = false;
                 showYCbCrButton.Enabled = false;
-                // setup the header
             }
         }
 
@@ -81,6 +80,20 @@ namespace Compression
             {
                 this.saveFile(saveFileDialog.FileName);
             }
+        }
+
+        private void clearPicturesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            pictureBox1.Image = null;
+            pictureBox2.Image = null;
+            pictureBox3.Image = null;
+            rgbChangeButton.Enabled = false;
+            ShowYButton.Enabled = false;
+            showCbButton.Enabled = false;
+            ShowCrButton.Enabled = false;
+            showYCbCrButton.Enabled = false;
+            saveToolStripMenuItem.Enabled = false;
+            fileNameBox.Text = null;
         }
 
         private void rgbChangeButton_Click(object sender, EventArgs e)
@@ -340,22 +353,22 @@ namespace Compression
         */
         private void ShowYButton_Click(object sender, EventArgs e)
         {
-            pictureBox3.Image = dataObj.getYBitmap(pictureBox1.Image);
+            pictureBox3.Image = dataObj.getYBitmap(dataObj.gHead);
         }
 
         private void ShowCrButton_Click(object sender, EventArgs e)
         {
-            pictureBox3.Image = dataObj.getCrBitmap(pictureBox1.Image);
+            pictureBox3.Image = dataObj.getCrBitmap(dataObj.gHead);
         }
 
         private void showCbButton_Click(object sender, EventArgs e)
         {
-            pictureBox3.Image = dataObj.getCbBitmap(pictureBox1.Image);
+            pictureBox3.Image = dataObj.getCbBitmap(dataObj.gHead);
         }
 
         private void showYCbCrButton_Click(object sender, EventArgs e)
         {
-            pictureBox3.Image = dataObj.getRGBtoYCrCb();
+            pictureBox3.Image = dataObj.getYCbCrBitmap(dataObj.gHead);
         }
 
         public void saveFile(string fileName)
@@ -459,12 +472,6 @@ namespace Compression
                 ref dataObj
                 );
             dataChanger = new RGBChanger();
-
-            ShowYButton.Enabled = true;
-            showCbButton.Enabled = true;
-            ShowCrButton.Enabled = true;
-            showYCbCrButton.Enabled = true;
-            saveToolStripMenuItem.Enabled = true;
             pictureBox2.Image = dataObj.generateBitmap();
         }
 
