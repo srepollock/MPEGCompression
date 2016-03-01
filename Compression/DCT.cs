@@ -6,23 +6,30 @@ using System.Threading.Tasks;
 
 namespace Compression
 {
-    /** 
-  * Double check that i should work with PIxel data or should I work with
-  * byte data. There could be some rounding errors here.
-  */
+    /// <summary>
+    /// DCT class
+    /// This is used to DCT the data, to show the changes of the image's
+    /// pixel data. Everything should be taken in as bytes into forward
+    /// DCT and returned as Doubles (to not lose data). And inverse
+    /// will take in either Doubles and returned as bytes or sbytes.
+    /// </summary>
     public class DCT
     {
-
-        /**
-          * Does the contstructor need to hold anything? What is the purpose of 
-          * this class? Should it be an information holder? Or should it just
-          * be a worker? (Most likely worker)
-          */
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public DCT()
         {
 
         }
-
+        /// <summary>
+        /// C
+        /// Will check if the number entered is 0, and if it is, then 
+        /// returns 1 / sqrt(2).
+        /// Otherwise returns 1.
+        /// </summary>
+        /// <param name="x">Number to be checked</param>
+        /// <returns></returns>
         private double C(int x)
         {
             if (x == 0)
@@ -34,9 +41,14 @@ namespace Compression
             }
         }
 
-        /*
-            Proper??
-        */
+        /// <summary>
+        /// Forward DCT
+        /// This will show the changes in the images data. This will only
+        /// ever work with blocks of 8x8, so it can be hardcoded to the sum
+        /// of E8 E8.
+        /// </summary>
+        /// <param name="imgData">Image data as an 8x8 block</param>
+        /// <returns>double array of doubles</returns>
         public double[,] forwardDCT(byte[,] imgData)
         {
             double[,] forwardData = new double[8, 8];
@@ -60,7 +72,13 @@ namespace Compression
             }
             return forwardData;
         }
-
+        /// <summary>
+        /// Byte Inverse DCT
+        /// Reverses forward DCT to undo showing the changes of the data.
+        /// Again, it will only work on 8x8 blocks of image data.
+        /// </summary>
+        /// <param name="dctData">Data that has been DCT'ed</param>
+        /// <returns>Double array of Byte data</returns>
         public byte[,] inverseDCTByte(double[,] dctData)
         {
             byte[,] inverseData = new byte[8, 8];
@@ -87,7 +105,13 @@ namespace Compression
             }
             return inverseData;
         }
-
+        /// <summary>
+        /// Double Inverse DCT
+        /// Reverses forward DCT to undo showing the changes of the data.
+        /// Again, it will only work on 8x8 blocks of image data.
+        /// </summary>
+        /// <param name="dctData">Data that has been DCT'ed</param>
+        /// <returns>Double array of double data</returns>
         public double[,] dinverseDCT(double[,] dctData)
         {
             double[,] inverseData = new double[8, 8];
@@ -113,93 +137,6 @@ namespace Compression
                 }
             }
             return inverseData;
-        }
-
-        public double[,] inverseDCT(byte[,] dctData)
-        {
-            double[,] inverseData = new double[8, 8];
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    inverseData[x, y] = innerInverseDCT(dctData[x, y], x, y);
-                }
-            }
-            return inverseData;
-        }
-
-        /*
-            Use this one
-
-            This is going to compression in our 'jpeg' format
-
-            Passing in data (data from src[u, v]
-            Using (u, v) as the index of the datas {x, y}
-
-            Should get back doubles. We only convert to bytes after quantization
-        */
-        public double innerForwardDCT(byte src, int u, int v)
-        {
-            double temp = 0;
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = 0; j < 7; j++)
-                {
-                    temp += Math.Cos(((2 * i + 1) * u * Math.PI) / 16) 
-                        * Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
-                        * src;
-                }
-            }
-            return temp * ((2 * C(u) * C(v)) / 4);
-        }
-
-        /*
-            Use this one
-
-            This is going back from the data calculated (for decompression)
-
-            Passing in data (data from created[u, v]
-            Using (u, v) as the index of the data {x, y}
-        */
-        public double innerInverseDCT(byte calc, int u, int v)
-        {
-            double temp = 0;
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = 0; j < 7; j++)
-                {
-                    temp += ((2 * C(u) * C(v)) / 4) 
-                        * Math.Cos(((2 * i + 1) * u * Math.PI) / 16) 
-                        * Math.Cos(((2 * i + 1) * v * Math.PI) / 16) 
-                        * calc;
-                }
-            }
-            return temp;
-        }
-
-        // testing
-        public byte innerInverseDCT(double calc, int u, int v)
-        {
-            double temp = 0;
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = 0; j < 7; j++)
-                {
-                    temp += ((2 * C(u) * C(v)) / 4)
-                        * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
-                        * Math.Cos(((2 * i + 1) * v * Math.PI) / 16)
-                        * calc;
-                }
-            }
-            if(temp > 255)
-            {
-                temp = 255;
-            }
-            if(temp < 0)
-            {
-                temp = 0;
-            }
-            return Convert.ToByte(temp);
         }
     }
 }

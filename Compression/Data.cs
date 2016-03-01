@@ -7,79 +7,88 @@ using System.Threading.Tasks;
 
 namespace Compression
 {
+    /// <summary>
+    /// Data class
+    /// This is the data class. It is an information expert and should just
+    /// hold all the necessary data for the class. This should be passed
+    /// as a reference to classes that need to insert data into the file loader
+    /// class's object, otherwise it can be used as a reference to read.
+    /// </summary>
     public class Data
     {
-        /*
-            Original bitmap
-        */
+        // are these still necessary?
+
+        /// <summary>
+        /// Original bitmap
+        /// </summary>
         private Bitmap original;
-        /*
-            Bitmap after RGB->YCrCb
-        */
+        /// <summary>
+        /// RGB to YCrCb bitmap
+        /// </summary>
         private Bitmap RGBtoYCrCb;
-        /*
-            Bitmap after YCrCb->RGB
-        */
+        /// <summary>
+        /// YCrCb to RGB bitmap
+        /// </summary>
         private Bitmap YCrCbtoRGB;
 
-        /*
-            Image byte data
-        */
+        /// <summary>
+        /// Public data for Y, Cb, Cr as both doubles and bytes
+        /// </summary>
         public byte[,] yData;
         public byte[,] CbData;
         public byte[,] CrData;
         public double[,] dyData;
         public double[,] dCbData;
         public double[,] dCrData;
+
+        /// <summary>
+        /// Private data for R, G and B data as bytes
+        /// </summary>
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;
+        /// <summary>
+        /// Private data for YCbCr data
+        /// </summary>
         Color[,] YCbCrData;
+        /// <summary>
+        /// Private Forward DCT data as doubles
+        /// </summary>
         double[,] forwardDCTData;
+        /// <summary>
+        /// Private Inverse DCT data as bytes
+        /// </summary>
         byte[,] inverseDCTData;
 
+        /// <summary>
+        /// Public int for the Original Width, Height, padded width, padded
+        /// height.
+        /// </summary>
         public int orgWidth, 
                    orgHeight, 
                    paddedWidth, 
                    paddedHeight;
 
+        /// <summary>
+        /// Public arrays for final data, YEncoding data, CbEncoding data,
+        /// and CrEncoding data. as sbytes
+        /// </summary>
         public sbyte[] finalData;
         public sbyte[] yEncoded,
                        cbEncoded,
                        crEncoded;
 
+        /// <summary>
+        /// Public header for the file, both for reading and saving.
+        /// </summary>
         public Header gHead = new Header();
 
-        /*
-            Quantization Tables
-        */
-        public readonly int[,] luminance = {
-            { 16, 11, 10, 16, 24, 40, 51, 61 },
-            { 12, 12, 14, 19, 26, 58, 60, 55 },
-            { 14, 13, 16, 24, 40, 57, 69, 56 },
-            { 14, 17, 22, 29, 51, 87, 80, 62 },
-            { 18, 22, 37, 56, 68, 109, 103, 77 },
-            { 24, 35, 55, 64, 81, 104, 113, 92 },
-            { 49, 64, 78, 87, 103, 121, 120, 101 },
-            { 72, 92, 95, 98, 112, 100, 103, 99 }
-        };
-
-        public readonly int[,] chrominance = {
-            { 17, 18, 24, 27, 47, 99, 99, 99 },
-            { 18, 21, 26, 66, 99, 99, 99, 99 },
-            { 24, 26, 56, 99, 99, 99, 99, 99 },
-            { 47, 66, 99, 99, 99, 99, 99, 99 },
-            { 99, 99, 99, 99, 99, 99, 99, 99 },
-            { 99, 99, 99, 99, 99, 99, 99, 99 },
-            { 99, 99, 99, 99, 99, 99, 99, 99 },
-            { 99, 99, 99, 99, 99, 99, 99, 99 }
-        };
-
-        public Data()
-        {
-
-        }
-
+        /// <summary>
+        /// Get Y Bitmap
+        /// Gets the Y bitmap for the image based on the header
+        /// </summary>
+        /// <param name="header">Header for the image size</param>
+        /// <returns></returns>
         public Bitmap getYBitmap(Header header)
         {
             Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
@@ -94,7 +103,12 @@ namespace Compression
 
             return outBmp;
         }
-
+        /// <summary>
+        /// Get Cr Bitmap
+        /// Gets the Cr bitmap for the image based on the header
+        /// </summary>
+        /// <param name="header">Header for the image size</param>
+        /// <returns></returns>
         public Bitmap getCrBitmap(Header header)
         {
             Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
@@ -109,7 +123,12 @@ namespace Compression
 
             return outBmp;
         }
-
+        /// <summary>
+        /// Get Cb Bitmap
+        /// Gets the Cb bitmap for the image based on the header
+        /// </summary>
+        /// <param name="header">Header for the image</param>
+        /// <returns></returns>
         public Bitmap getCbBitmap(Header header)
         {
             Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
@@ -124,7 +143,12 @@ namespace Compression
 
             return outBmp;
         }
-
+        /// <summary>
+        /// Get YCbCr Bitmap
+        /// Gets the YCbCr bitmap for the image based on the header
+        /// </summary>
+        /// <param name="header">Header for the image</param>
+        /// <returns></returns>
         public Bitmap getYCbCrBitmap(Header header)
         {
             Bitmap outBmp = new Bitmap(header.getWidth(), header.getHeight());
@@ -138,7 +162,11 @@ namespace Compression
 
             return outBmp;
         }
-
+        /// <summary>
+        /// Generate Bitmap
+        /// Generates the bitmap for the image
+        /// </summary>
+        /// <returns></returns>
         public Bitmap generateBitmap() {
             Bitmap outBmp = new Bitmap(gHead.getWidth(), gHead.getHeight()); 
             for (int y = 0; y < gHead.getHeight(); y++) 
@@ -151,9 +179,9 @@ namespace Compression
             return outBmp;
         }
 
-        /*
-            Getters
-        */
+        /// <summary>
+        /// Getters for all the data variables
+        /// </summary>
         public Bitmap getOriginal() { return this.original; }
         public Bitmap getRGBtoYCrCb() { return this.RGBtoYCrCb; }
         public Bitmap getYCrCbtoRGB() { return this.YCrCbtoRGB; }
@@ -172,9 +200,9 @@ namespace Compression
         public byte[,] getbData() { return this.bData; }
         public Color[,] getYCrCbData() { return this.YCbCrData; }
 
-        /*
-            Setters
-        */
+        /// <summary>
+        /// Setters for all the data variables
+        /// </summary>
         public void setOriginal(Bitmap bmp) { this.original = bmp; }
         public void setRGBtoYCrCb(Bitmap bmp) { this.RGBtoYCrCb = bmp; }
         public void setYCrCbtoRGB(Bitmap bmp) { this.YCrCbtoRGB = bmp; }

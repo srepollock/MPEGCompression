@@ -6,10 +6,26 @@ using System.Threading.Tasks;
 
 namespace Compression
 {
+    /// <summary>
+    /// Run Length Encoding class
+    /// Used to run RLE of the sbyte data passeed in, and to un rle the data
+    /// afterwards.
+    /// </summary>
     class RLE
     {
-        // data will be saved as
-            // (count, data)
+        /// <summary>
+        /// RLE
+        /// Data is saved as
+        /// {count, data}
+        /// This will run through the data and generate a count of data that
+        /// is the same in a run, until it hits a number that is different.
+        /// Simple function really.
+        /// 
+        /// * If the number hits 127, it is saved automatically and the run
+        /// is started agian, as we are saving sbytes *
+        /// </summary>
+        /// <param name="data">Data to be RLE'ed</param>
+        /// <returns>RLE'ed data</returns>
         public static sbyte[] rle(sbyte[] data)
         {
             sbyte[] output = new sbyte[0];
@@ -51,6 +67,15 @@ namespace Compression
 
             return output;
         }
+        /// <summary>
+        /// Un-RLE
+        /// data is read in as
+        /// {count, data}
+        /// This will run through the data saved and generate an array
+        /// based off this data.
+        /// </summary>
+        /// <param name="data">Data that has been RLE'ed</param>
+        /// <returns>Un-RLE'ed data</returns>
         public static sbyte[] unrle(sbyte[] data)
         {
             sbyte[] output = new sbyte[0];

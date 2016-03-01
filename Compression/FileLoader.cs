@@ -11,6 +11,11 @@ using System.Windows.Forms;
 
 namespace Compression
 { 
+    /// <summary>
+    /// File Loader
+    /// This is the main program class, defining all the basic functions
+    /// to run the program, and button calls.
+    /// </summary>
     public partial class FileLoader : Form
     {
         /*
@@ -23,6 +28,13 @@ namespace Compression
         Blocks block;
         Quantize q;
 
+        /// <summary>
+        /// File Loader
+        /// This function will be called on the startup of the window. It 
+        /// initializes the objects for the data, dct, zigzag, block, and 
+        /// quantize class. It also turns off all the buttons that should 
+        /// not be pressed right away.
+        /// </summary>
         public FileLoader()
         {
             InitializeComponent();
@@ -39,7 +51,14 @@ namespace Compression
             showYCbCrButton.Enabled = false;
             saveToolStripMenuItem.Enabled = false;
         }
-
+        /// <summary>
+        /// Load Files
+        /// This function will load in the files specified by the user. 
+        /// It will then turn on all buttons allowed when opening that
+        /// type of file.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -70,7 +89,13 @@ namespace Compression
                 showYCbCrButton.Enabled = false;
             }
         }
-
+        /// <summary>
+        /// Save File
+        /// This function opens a file save dialog, (to specify the file name).
+        /// Calls the saveFile method.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -81,7 +106,13 @@ namespace Compression
                 this.saveFile(saveFileDialog.FileName);
             }
         }
-
+        /// <summary>
+        /// Clear Pictures
+        /// Removes the pictures from all the picture boxes, and will turn
+        /// off all buttons that should not be allowed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void clearPicturesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             pictureBox1.Image = null;
@@ -95,7 +126,17 @@ namespace Compression
             saveToolStripMenuItem.Enabled = false;
             fileNameBox.Text = null;
         }
-
+        /// <summary>
+        /// RGBChangeButton
+        /// This function changes the image on the left (loaded in by the user)
+        /// to a YCbCr format, and back. This will just display the image
+        /// in RGB format, but behind the scenes, sets up the data for
+        /// YCbCr display, subsamples, and sets up data to save the image to
+        /// file format with a header after being run through Run Length
+        /// Encoding.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void rgbChangeButton_Click(object sender, EventArgs e)
         {
             int sz = 0;
@@ -132,21 +173,17 @@ namespace Compression
                     tempY = block.generate2DBlocks(dataObj.getyData(), x, y);
                     tempDY = dctObj.forwardDCT(tempY);
                     // quantize
-                    stempY = q.quantizeLuma(tempDY, dataObj);
+                    stempY = q.quantizeLuma(tempDY);
                     // zigzag
                     szztempY = zz.zigzag(stempY);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.yEncoded, sz);
                     Buffer.BlockCopy(szztempY, 0, dataObj.yEncoded, pos, 64);
-                    // rle
-
-                    // unrle
-
                     // unzigzag
                     stempY = zz.unzigzag(szztempY);
                     // inverse quantize
-                    tempDY = q.inverseQuantizeLuma(stempY, dataObj);
+                    tempDY = q.inverseQuantizeLuma(stempY);
                     tempY = dctObj.inverseDCTByte(tempDY);
                     block.putback(dataObj.getyData(), tempY, x, y);
                     pos += 64;
@@ -165,21 +202,17 @@ namespace Compression
                     tempCb = block.generate2DBlocks(dataObj.getCbData(), i, j);
                     tempDCb = dctObj.forwardDCT(tempCb);
                     // quantize
-                    stempCb = q.quantizeData(tempDCb, dataObj);
+                    stempCb = q.quantizeData(tempDCb);
                     // zigzag
                     szztempB = zz.zigzag(stempCb);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.cbEncoded, sz);
                     Buffer.BlockCopy(szztempB, 0, dataObj.cbEncoded, pos, 64);
-                    // rle
-
-                    // unrle
-
                     // unzigzag
                     stempCb = zz.unzigzag(szztempB);
                     // inverse quantize
-                    tempDCb = q.inverseQuantizeData(stempCb, dataObj);
+                    tempDCb = q.inverseQuantizeData(stempCb);
                     tempCb = dctObj.inverseDCTByte(tempDCb);
                     block.putback(dataObj.getCbData(), tempCb, i, j);
 
@@ -187,21 +220,17 @@ namespace Compression
                     tempCr = block.generate2DBlocks(dataObj.getCrData(), i, j);
                     tempDCr = dctObj.forwardDCT(tempCr);
                     // quantize
-                    stempCr = q.quantizeData(tempDCr, dataObj);
+                    stempCr = q.quantizeData(tempDCr);
                     // zigzag
                     szztempR = zz.zigzag(stempCr);
 
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.crEncoded, sz);
                     Buffer.BlockCopy(szztempR, 0, dataObj.crEncoded, pos, 64);
-                    // rle
-
-                    // unrle
-
                     // unzigzag
                     stempCr = zz.unzigzag(szztempR);
                     // inverse quantize
-                    tempDCr = q.inverseQuantizeData(stempCr, dataObj);
+                    tempDCr = q.inverseQuantizeData(stempCr);
                     tempCr = dctObj.inverseDCTByte(tempDCr);
                     block.putback(dataObj.getCrData(), tempCr, i, j);
                     pos += 64;
@@ -232,7 +261,13 @@ namespace Compression
             saveToolStripMenuItem.Enabled = true;
             pictureBox2.Image = dataObj.generateBitmap();
         }
-
+        /// <summary>
+        /// Set Final Data
+        /// This function sets the final data to be outputted to a file into
+        /// a single array. This will make it easier to save the data by
+        /// only calling on one array, instead of 3 each of different
+        /// sizes.
+        /// </summary>
         private void setFinalData()
         {
             int fd = 0;
@@ -250,7 +285,12 @@ namespace Compression
                 dataObj.finalData[fd++] = dataObj.crEncoded[kk];
             }
         }
-
+        /// <summary>
+        /// Split Final Data
+        /// This splits the data up that has been read into the program
+        /// from a file. It splits the data up based on the size of the
+        /// arrays read in from the header.
+        /// </summary>
         private void splitFinalData()
         {
             int fd = 0;
@@ -268,7 +308,16 @@ namespace Compression
                 dataObj.crEncoded[kk] = dataObj.finalData[fd++];
             }
         }
-
+        /// <summary>
+        /// Padd data by a certain width and height. This will ensure
+        /// that the data is divisable by 8 and 2. Because the data is cut
+        /// in half, and then needs to be cut up into 8x8 blocks, it needs 
+        /// to be a mod of 16 (explained in the Pad class).
+        /// </summary>
+        /// <param name="data">Original data</param>
+        /// <param name="padxby">Pad the width by x amount</param>
+        /// <param name="padyby">Pad the height by y amount</param>
+        /// <returns></returns>
         private byte[,] padData(byte[,] data, int padxby, int padyby)
         {
             int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
@@ -297,7 +346,19 @@ namespace Compression
             }
             return temp;
         }
-
+        /// <summary>
+        /// Padd data by a certain width and height. This will ensure
+        /// that the data is divisable by 8 and 2. Because the data is cut
+        /// in half, and then needs to be cut up into 8x8 blocks, it needs 
+        /// to be a mod of 16 (explained in the Pad class). This is used on
+        /// data that is already halved.
+        /// 
+        /// * I don't belive I use this class any more *
+        /// </summary>
+        /// <param name="data">Original data</param>
+        /// <param name="padxby">Pad the width by x amount</param>
+        /// <param name="padyby">Pad the height by y amount</param>
+        /// <returns></returns>
         private byte[,] cpadData(byte[,] data, int padxby, int padyby)
         {
             int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
@@ -351,26 +412,54 @@ namespace Compression
             dataObj.setbData(dataChanger.getbData());
         }
         */
+        /// <summary>
+        /// Show Y button
+        /// Shows the Luminance of the image.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ShowYButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getYBitmap(dataObj.gHead);
         }
-
+        /// <summary>
+        /// Show Cr button
+        /// Shows the Chroma red of the image.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ShowCrButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getCrBitmap(dataObj.gHead);
         }
-
+        /// <summary>
+        /// Show Cb button
+        /// Shows the Chroma blue of the image.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void showCbButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getCbBitmap(dataObj.gHead);
         }
-
+        /// <summary>
+        /// Show YCbCr button
+        /// Shows the YCbCr of the image.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void showYCbCrButton_Click(object sender, EventArgs e)
         {
             pictureBox3.Image = dataObj.getYCbCrBitmap(dataObj.gHead);
         }
-
+        /// <summary>
+        /// Save File
+        /// Called when we want to save the file, to the specified file name.
+        /// This is used after the image has been changed to YCbCr and back,
+        /// so that we can have a better compression when saving the data and
+        /// using RLE.
+        /// </summary>
+        /// <param name="fileName">File name to the data to</param>
         public void saveFile(string fileName)
         {
             if (pictureBox2.Image == null) return;
@@ -384,7 +473,12 @@ namespace Compression
             wr.Close();
             fs.Close();
         }
-
+        /// <summary>
+        /// Open File
+        /// This opens the file of the specified name. This will only be
+        /// called on files that end with *.rippeg. (Why? Because it's funny)
+        /// </summary>
+        /// <param name="fileName">File name to load data from</param>
         public void openFile(string fileName)
         {
             this.Text = fileName; // sets the text of the form to the file name
@@ -429,7 +523,7 @@ namespace Compression
                     // unzigzag
                     stempY = zz.unzigzag(tempY);
                     // inverse quantize
-                    tempDY = q.inverseQuantizeLuma(stempY, dataObj);
+                    tempDY = q.inverseQuantizeLuma(stempY);
                     tempDY = dctObj.dinverseDCT(tempDY);
                     block.putbackd(dataObj.getdyData(), tempDY, x, y);
                     pos += 64;
@@ -446,7 +540,7 @@ namespace Compression
                     // unzigzag
                     stempCb = zz.unzigzag(tempCb);
                     // inverse quantize
-                    tempDCb = q.inverseQuantizeData(stempCb, dataObj);
+                    tempDCb = q.inverseQuantizeData(stempCb);
                     tempDCb = dctObj.dinverseDCT(tempDCb);
                     block.putbackd(dataObj.getdCbData(), tempDCb, x, y);
 
@@ -456,7 +550,7 @@ namespace Compression
                     // unzigzag
                     stempCr = zz.unzigzag(tempCr);
                     // inverse quantize
-                    tempDCr = q.inverseQuantizeData(stempCr, dataObj);
+                    tempDCr = q.inverseQuantizeData(stempCr);
                     tempDCr = dctObj.dinverseDCT(tempDCr);
                     block.putbackd(dataObj.getdCrData(), tempDCr, x, y);
                     pos += 64;
@@ -474,7 +568,13 @@ namespace Compression
             dataChanger = new RGBChanger();
             pictureBox2.Image = dataObj.generateBitmap();
         }
-
+        /// <summary>
+        /// Write Data
+        /// Writes the header data. This data comes from after we have changed
+        /// the data from RGB to YCrCb.
+        /// </summary>
+        /// <param name="file">File to write to</param>
+        /// <param name="header">Header information</param>
         private void writeData(BinaryWriter file, Header header)
         {
             file.Write(header.getHeight());
@@ -484,7 +584,14 @@ namespace Compression
             file.Write(header.getCrlen());
             file.Write(header.getQuality());
         }
-
+        /// <summary>
+        /// Write Data
+        /// Writes the final data, loaded earlier into the Data object, and
+        /// writes the data as sbytes to the file after being RLE'ed.
+        /// </summary>
+        /// <param name="file">File to write to</param>
+        /// <param name="header">Header information for data size</param>
+        /// <param name="data">Data to write</param>
         private void writeData(BinaryWriter file, Header header, sbyte[] data)
         {
             int c = 0;
@@ -495,7 +602,13 @@ namespace Compression
             for (int i = 0; i < header.getCrlen(); i++)
                 file.Write(data[c++]);
         }
-
+        /// <summary>
+        /// Read Data
+        /// Reads data into the header object frome the specifed file.
+        /// Necessary to read the data in properly.
+        /// </summary>
+        /// <param name="file">File to read data in from</param>
+        /// <param name="header">Header to read the data into</param>
         private void readData(BinaryReader file, Header header)
         {
             header.setHeight(file.ReadInt16());
@@ -505,7 +618,15 @@ namespace Compression
             header.setCrlen(file.ReadInt32());
             header.setQuality(file.ReadByte());
         }
-
+        /// <summary>
+        /// Read Data
+        /// Reads data from the file into the data array. This will read in
+        /// the data based on the 3 array sizes we have saved specified in
+        /// the header which we also pass in.
+        /// </summary>
+        /// <param name="file">File to read data in from</param>
+        /// <param name="header">Header for the array sizes</param>
+        /// <param name="data">Data array to read into</param>
         private void readData(BinaryReader file, Header header, sbyte[] data)
         {
             

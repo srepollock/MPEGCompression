@@ -8,15 +8,12 @@ using System.Threading.Tasks;
 
 namespace Compression
 {
+    /// <summary>
+    /// RGBChanger class
+    /// This class is used to change the data from RGB to YCbCr and back
+    /// </summary>
     class RGBChanger
     {
-
-        /* Image data being passed in */
-        public RGBChanger()
-        {
-
-        }
-
         /* 
             Takes in an array of data that is the image RGB data
             Then converts it to YCbCr data
@@ -26,6 +23,14 @@ namespace Compression
 
             returns the new bitmap
         */
+        /// <summary>
+        /// RGB -> YCbCr
+        /// Takes in the bitmap of the original image, then changes the image
+        /// to YCbCr data.
+        /// Then returns the YCbCr data.
+        /// </summary>
+        /// <param name="orgBmp">Original bitmap to base the image off</param>
+        /// <param name="dataObj">Data object to save the data to</param>
         public void RGBtoYCbCr(Bitmap orgBmp, ref Data dataObj)
         {
             Bitmap bmp = orgBmp;
@@ -69,7 +74,12 @@ namespace Compression
             dataObj.setCrData(CrData);
             dataObj.setYCrCbData(YCbCrData);
         }
-
+        /// <summary>
+        /// YCbCr -> RGB
+        /// Changes the data in the data object to RGB data. Then saves the
+        /// data back to the Data object.
+        /// </summary>
+        /// <param name="dataObj">Data object to read and save the data from/to</param>
         public void YCbCrtoRGB(ref Data dataObj)
         {
 
@@ -104,7 +114,16 @@ namespace Compression
             dataObj.setgData(gData);
             dataObj.setbData(bData);
         }
-
+        /// <summary>
+        /// sYCbCr -> RGB
+        /// Changes the data in the data object to RGB data. Then saves the
+        /// data back to the Data object.
+        /// This is for sbytes
+        /// 
+        /// * Don't know if I really need this function. Is it not the exact
+        /// same as above?
+        /// </summary>
+        /// <param name="dataObj">Data object to read and save the data from/to</param>
         public void sYCbCrtoRGB(ref Data dataObj)
         {
             int width = dataObj.gHead.getWidth();

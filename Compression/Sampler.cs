@@ -6,8 +6,21 @@ using System.Threading.Tasks;
 
 namespace Compression
 {
+    /// <summary>
+    /// Sampler class
+    /// This class is used to up/sub sample data.
+    /// </summary>
     class Sampler
     {
+        /// <summary>
+        /// Upsample
+        /// Upsamples the data to double the size of what it originally is
+        /// using a 4:2:0 ideaology. (makes a 2x2 block equal to the top 
+        /// right data).
+        /// </summary>
+        /// <param name="org">Original 2D byte data to be upsampled</param>
+        /// <param name="dataObj">Data object for the padded height and width of the image</param>
+        /// <returns>2D byte array upsampled (doubled in size)</returns>
         public static byte[,] upsample(byte[,] org, ref Data dataObj)
         {
             int height = dataObj.paddedHeight,
@@ -37,7 +50,15 @@ namespace Compression
             }
             return output;
         }
-
+        /// <summary>
+        /// Upsample
+        /// Upsamples the data to double the size of what it originally is
+        /// using a 4:2:0 idealogoy (makes a 2x2 block equal to the top
+        /// right data).
+        /// </summary>
+        /// <param name="org">Original 2D double array to be upsampled</param>
+        /// <param name="dataObj">Data object for the padded height and width of the image</param>
+        /// <returns>2D double array upsampled (doubled in size)</returns>
         public static double[,] upsample(double[,] org, ref Data dataObj)
         {
             int height = dataObj.paddedHeight,
@@ -67,7 +88,14 @@ namespace Compression
             }
             return output;
         }
-
+        /// <summary>
+        /// Subsample
+        /// Subsamples the data to literally 1/2 the size of what it originally
+        /// was.
+        /// </summary>
+        /// <param name="org">Original 2D byte data array</param>
+        /// <param name="dataObj">Data object for the padded height and width of the image</param>
+        /// <returns>2D byte array (1/2 the size of the original)</returns>
         public static byte[,] subsample(byte[,] org, ref Data dataObj)
         {
             int height = dataObj.paddedHeight,
@@ -84,7 +112,14 @@ namespace Compression
             }
             return output;
         }
-
+        /// <summary>
+        /// SubSample
+        /// Subsamples the data to literally 1/2 the size of what it originally
+        /// was.
+        /// </summary>
+        /// <param name="org">Original 2D sbyte data array</param>
+        /// <param name="dataObj">Data object for the padded height and width of the image</param>
+        /// <returns>2D sbyte array (1/2 the size of the orignal)</returns>
         public static sbyte[,] supsample(sbyte[,] org, ref Data dataObj)
         {
             int height = dataObj.paddedHeight,
@@ -102,7 +137,14 @@ namespace Compression
             }
             return output;
         }
-
+        /// <summary>
+        /// S SubSample
+        /// Subsamples the data to literally 1/2 the size of what it originally
+        /// was.
+        /// </summary>
+        /// <param name="org">Original 2D sbyte data array</param>
+        /// <param name="dataObj">Data object for the padded height and widht of the image</param>
+        /// <returns>2D sbyte array (1/2 the size of the original)</returns>
         public static sbyte[,] ssubsample(sbyte[,] org, ref Data dataObj)
         {
             int height = dataObj.paddedHeight,
