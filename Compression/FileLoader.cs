@@ -387,31 +387,6 @@ namespace Compression
             }
             return temp;
         }
-        /*
-        private void updateYCrCbDataObject()
-        {
-            dataObj.setyData(dataChanger.getyData());
-            // subsample data
-            dataObj.setCbData(Sampler.subsample(dataChanger.getCbData(), dataObj));
-            dataObj.setCrData(Sampler.subsample(dataChanger.getCrData(), dataObj));
-
-            dataObj.setYCrCbData(dataChanger.getYCrCbData());
-        }
-
-        private void updateRGBChangerYCrCBData()
-        {
-            dataChanger.setyData(dataObj.getyData());
-            dataChanger.setCbData(dataObj.getCbData());
-            dataChanger.setCrData(dataObj.getCrData());
-        }
-        
-        private void updateRGBDataObject()
-        {
-            dataObj.setrData(dataChanger.getrData());
-            dataObj.setgData(dataChanger.getgData());
-            dataObj.setbData(dataChanger.getbData());
-        }
-        */
         /// <summary>
         /// Show Y button
         /// Shows the Luminance of the image.
