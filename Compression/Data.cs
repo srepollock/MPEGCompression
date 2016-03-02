@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 namespace Compression
 {
     /// <summary>
-    /// Data class
+    /// Holds all the data for the program.
+    /// </summary>
+    /// <remarks>
     /// This is the data class. It is an information expert and should just
     /// hold all the necessary data for the class. This should be passed
     /// as a reference to classes that need to insert data into the file loader
     /// class's object, otherwise it can be used as a reference to read.
-    /// </summary>
+    /// </remarks>
     public class Data
     {
         // are these still necessary?
@@ -84,9 +86,11 @@ namespace Compression
         public Header gHead = new Header();
 
         /// <summary>
-        /// Get Y Bitmap
-        /// Gets the Y bitmap for the image based on the header
+        /// Gets Y Bitmap
         /// </summary>
+        /// <remarks>
+        /// Gets the Y bitmap for the image based on the header
+        /// </remarks>
         /// <param name="header">Header for the image size</param>
         /// <returns></returns>
         public Bitmap getYBitmap(Header header)
@@ -103,10 +107,13 @@ namespace Compression
 
             return outBmp;
         }
+
         /// <summary>
-        /// Get Cr Bitmap
-        /// Gets the Cr bitmap for the image based on the header
+        /// Gets Cr Bitmap
         /// </summary>
+        /// <remarks>
+        /// Gets the Cr bitmap for the image based on the header
+        /// </remarks>
         /// <param name="header">Header for the image size</param>
         /// <returns></returns>
         public Bitmap getCrBitmap(Header header)
@@ -123,10 +130,13 @@ namespace Compression
 
             return outBmp;
         }
+
         /// <summary>
-        /// Get Cb Bitmap
-        /// Gets the Cb bitmap for the image based on the header
+        /// Gets Cb Bitmap
         /// </summary>
+        /// <remarks>
+        /// Gets the Cb bitmap for the image based on the header
+        /// </remarks>
         /// <param name="header">Header for the image</param>
         /// <returns></returns>
         public Bitmap getCbBitmap(Header header)
@@ -143,10 +153,13 @@ namespace Compression
 
             return outBmp;
         }
+
         /// <summary>
-        /// Get YCbCr Bitmap
-        /// Gets the YCbCr bitmap for the image based on the header
+        /// Gets YCbCr Bitmap
         /// </summary>
+        /// <remarks>
+        /// Gets the YCbCr bitmap for the image based on the header
+        /// </remarks>
         /// <param name="header">Header for the image</param>
         /// <returns></returns>
         public Bitmap getYCbCrBitmap(Header header)
@@ -162,10 +175,13 @@ namespace Compression
 
             return outBmp;
         }
+
         /// <summary>
-        /// Generate Bitmap
-        /// Generates the bitmap for the image
+        /// Generates the Bitmap for the image data
         /// </summary>
+        /// <remarks>
+        /// Generates the bitmap for the image
+        /// </remarks>
         /// <returns></returns>
         public Bitmap generateBitmap() {
             Bitmap outBmp = new Bitmap(gHead.getWidth(), gHead.getHeight()); 

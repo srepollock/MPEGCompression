@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 namespace Compression
 {
     /// <summary>
-    /// ZigZag class
+    /// Runs through an array in a zigzag pattern to read the data.
+    /// </summary>
+    /// <remarks>
     /// This class uses my own zigzag implementation for the class.
     /// This will run through a 8x8 2D array in a zigzag pattern, starting
     /// in the top left, and finishing in the bottom right.
@@ -15,14 +17,16 @@ namespace Compression
     /// 
     /// *Should be easy to change into any n*n block array, so long as the
     /// array is squared. Just needs to take in an extra parameter.*
-    /// </summary>
+    /// </remarks>
     class ZigZag
     {
         /// <summary>
-        /// ZigZag
+        /// Runs zigzag on a 2D array and returns a 1D array.
+        /// </summary>
+        /// <remarks>
         /// This is the zigzag method, used to run through the array from
         /// top-left to bottom-right.
-        /// </summary>
+        /// </remarks>
         /// <param name="data">sbyte 2D array to zigzag through</param>
         /// <returns>A zigzagged single array</returns>
         public sbyte[] zigzag(sbyte[,] data) // or take in n for n * n array
@@ -95,11 +99,14 @@ namespace Compression
             result[63] = data[7, 7]; // again [n*n - 1] = [n - 1, n - 1] for the last number
             return result;
         }
+
         /// <summary>
-        /// Un-ZigZag
+        /// Unzigzags the 1D array of data and returns a 2D array.
+        /// </summary>
+        /// <remarks>
         /// This is the un-zigzag method, used to take in a single array
         /// and change it into a sbyte 2D array, un-zigzagged!
-        /// </summary>
+        /// </remarks>
         /// <param name="data">1D array of zigzagged data</param>
         /// <returns>An un-zigzagged 2D array</returns>
         public sbyte[,] unzigzag(sbyte[] data)

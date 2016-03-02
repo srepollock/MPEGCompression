@@ -57,7 +57,6 @@
       <DependentUpon>FileLoader.cs</DependentUpon>
     </Compile>
     <Compile Include="Header.cs" />
-    <Compile Include="MotionVector.cs" />
     <Compile Include="Pad.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

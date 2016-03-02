@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 namespace Compression
 {
     /// <summary>
-    /// RGBChanger class
-    /// This class is used to change the data from RGB to YCbCr and back
+    /// Class to change the data from RGB to YCbCr and back.
     /// </summary>
     class RGBChanger
     {
@@ -24,11 +23,14 @@ namespace Compression
             returns the new bitmap
         */
         /// <summary>
+        /// Changes RGB to YCbCr and saves the data into the Data object.
+        /// </summary>
+        /// <remarks>
         /// RGB -> YCbCr
         /// Takes in the bitmap of the original image, then changes the image
         /// to YCbCr data.
         /// Then returns the YCbCr data.
-        /// </summary>
+        /// </remarks>
         /// <param name="orgBmp">Original bitmap to base the image off</param>
         /// <param name="dataObj">Data object to save the data to</param>
         public void RGBtoYCbCr(Bitmap orgBmp, ref Data dataObj)
@@ -74,11 +76,16 @@ namespace Compression
             dataObj.setCrData(CrData);
             dataObj.setYCrCbData(YCbCrData);
         }
+
         /// <summary>
+        /// Changes YCbCr data back into RGB data and saves it to the Data
+        /// object.
+        /// </summary>
+        /// <remarks>
         /// YCbCr -> RGB
         /// Changes the data in the data object to RGB data. Then saves the
         /// data back to the Data object.
-        /// </summary>
+        /// </remarks>
         /// <param name="dataObj">Data object to read and save the data from/to</param>
         public void YCbCrtoRGB(ref Data dataObj)
         {
@@ -114,7 +121,12 @@ namespace Compression
             dataObj.setgData(gData);
             dataObj.setbData(bData);
         }
+
         /// <summary>
+        /// Changes YCbCr data back into RGB data and saves into the Data 
+        /// object.
+        /// </summary>
+        /// <remarks>
         /// sYCbCr -> RGB
         /// Changes the data in the data object to RGB data. Then saves the
         /// data back to the Data object.
@@ -122,7 +134,7 @@ namespace Compression
         /// 
         /// * Don't know if I really need this function. Is it not the exact
         /// same as above?
-        /// </summary>
+        /// </remarks>
         /// <param name="dataObj">Data object to read and save the data from/to</param>
         public void sYCbCrtoRGB(ref Data dataObj)
         {

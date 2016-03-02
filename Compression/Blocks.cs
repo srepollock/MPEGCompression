@@ -7,16 +7,20 @@ using System.Threading.Tasks;
 namespace Compression
 {
     /// <summary>
-    /// Blocks class
+    /// Block class to generate 8x8 blocks for the data.
+    /// </summary>
+    /// <remarks>
     /// This class is specifically for creating 8x8 blocks of data, based on
     /// the offset of the position.
-    /// </summary>
+    /// </remarks>
     class Blocks
     {
         /// <summary>
-        /// Generate 2D Blocks
-        /// This will generate 2D blocks of byte data.
+        /// Generates 2D block of byte data.
         /// </summary>
+        /// <remarks>
+        /// This will generate 2D blocks of byte data.
+        /// </remarks>
         /// <param name="data">Original data</param>
         /// <param name="offsetx">X offset</param>
         /// <param name="offsety">Y offset</param>
@@ -33,10 +37,13 @@ namespace Compression
             }
             return output;
         }
+
         /// <summary>
-        /// Generate Blocks
-        /// This will generate a 1D block of 64 (8x8) of sbyte data.
+        /// Generates 1D block of sbyte data.
         /// </summary>
+        /// <remarks>
+        /// This will generate a 1D block of 64 (8x8) of sbyte data.
+        /// </remarks>
         /// <param name="data">Original sbyte data</param>
         /// <param name="offsetx">X offset</param>
         /// <param name="offsety">Y offset</param>
@@ -50,10 +57,13 @@ namespace Compression
             }
             return output;
         }
+
         /// <summary>
-        /// Generate Blocks
-        /// This will generate a block of sbyte data
+        /// Generates 1D block of sbyte data
         /// </summary>
+        /// <remarks>
+        /// This will generate a block of sbyte data
+        /// </remarks>
         /// <param name="data">Original sbyte data</param>
         /// <param name="offset">Offset in the 1D array</param>
         /// <returns>64 (8x8 block) of sbyte data</returns>
@@ -66,11 +76,14 @@ namespace Compression
             }
             return output;
         }
+
         /// <summary>
-        /// Put Back
+        /// Puts a 2D byte array back into the original position.
+        /// </summary>
+        /// <remarks>
         /// This puts the 8x8 block of byte data back into the original 
         /// postion of the data 2D array.
-        /// </summary>
+        /// </remarks>
         /// <param name="original">Original data array (where we put the data back)</param>
         /// <param name="data">Data to put back into the array</param>
         /// <param name="offsetx">X offset of where to put the data</param>
@@ -85,11 +98,14 @@ namespace Compression
                 }
             }
         }
+
         /// <summary>
-        /// Put Back S
+        /// Puts a 2D sbyte array back into the original position.
+        /// </summary>
+        /// <remarks>
         /// This puts the 8x8 block of sbyte data back into the original data
         /// 2D array.
-        /// </summary>
+        /// </remarks>
         /// <param name="original">Original data array (where we put the data back)</param>
         /// <param name="data">Data to put back into the array</param>
         /// <param name="offsetx">X offset of where to put the data</param>
@@ -104,11 +120,14 @@ namespace Compression
                 }
             }
         }
+
         /// <summary>
-        /// Put Back D
+        /// Puts a 2D double array back into the original position.
+        /// </summary>
+        /// <remarks>
         /// This puts the 8x8 block of doubles back into the original data
         /// 2D array.
-        /// </summary>
+        /// </remarks>
         /// <param name="original">Original data array (where we put the data back)</param>
         /// <param name="data">Data to put back into the array</param>
         /// <param name="offsetx">X offset of where to put the data</param>

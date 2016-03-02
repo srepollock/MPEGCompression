@@ -7,12 +7,14 @@ using System.Threading.Tasks;
 namespace Compression
 {
     /// <summary>
-    /// DCT class
+    /// Used to run DCT on the data, and to inverse DCT DCT'ed Data.
+    /// </summary>
+    /// <remarks>
     /// This is used to DCT the data, to show the changes of the image's
     /// pixel data. Everything should be taken in as bytes into forward
     /// DCT and returned as Doubles (to not lose data). And inverse
     /// will take in either Doubles and returned as bytes or sbytes.
-    /// </summary>
+    /// </remarks>
     public class DCT
     {
         /// <summary>
@@ -23,13 +25,15 @@ namespace Compression
 
         }
         /// <summary>
-        /// C
+        /// Checks if the number entered is 0, or 1.
+        /// </summary>
+        /// <remarks>
         /// Will check if the number entered is 0, and if it is, then 
         /// returns 1 / sqrt(2).
         /// Otherwise returns 1.
-        /// </summary>
+        /// </remarks>
         /// <param name="x">Number to be checked</param>
-        /// <returns></returns>
+        /// <returns>Double number to use in DCT or iDCT</returns>
         private double C(int x)
         {
             if (x == 0)
@@ -42,13 +46,15 @@ namespace Compression
         }
 
         /// <summary>
-        /// Forward DCT
+        /// DCT's the data forward.
+        /// </summary>
+        /// <remarks>
         /// This will show the changes in the images data. This will only
         /// ever work with blocks of 8x8, so it can be hardcoded to the sum
         /// of E8 E8.
-        /// </summary>
+        /// </remarks>
         /// <param name="imgData">Image data as an 8x8 block</param>
-        /// <returns>double array of doubles</returns>
+        /// <returns>Double array of doubles</returns>
         public double[,] forwardDCT(byte[,] imgData)
         {
             double[,] forwardData = new double[8, 8];
@@ -72,11 +78,14 @@ namespace Compression
             }
             return forwardData;
         }
+
         /// <summary>
-        /// Byte Inverse DCT
+        /// Reverses DCT'ed data and returns bytes.
+        /// </summary>
+        /// <remarks>
         /// Reverses forward DCT to undo showing the changes of the data.
         /// Again, it will only work on 8x8 blocks of image data.
-        /// </summary>
+        /// </remarks>
         /// <param name="dctData">Data that has been DCT'ed</param>
         /// <returns>Double array of Byte data</returns>
         public byte[,] inverseDCTByte(double[,] dctData)
@@ -105,11 +114,14 @@ namespace Compression
             }
             return inverseData;
         }
+
         /// <summary>
-        /// Double Inverse DCT
+        /// Takes in double DCT'ed data.
+        /// </summary>
+        /// <remarks>
         /// Reverses forward DCT to undo showing the changes of the data.
         /// Again, it will only work on 8x8 blocks of image data.
-        /// </summary>
+        /// </remarks>
         /// <param name="dctData">Data that has been DCT'ed</param>
         /// <returns>Double array of double data</returns>
         public double[,] dinverseDCT(double[,] dctData)

@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 namespace Compression
 {
     /// <summary>
-    /// Header class
-    /// This is the class that defines the header information of the image
+    /// Header object to hold the header data to save to the file.
     /// </summary>
+    /// <remarks>
+    /// This is the class that defines the header information of the image
+    /// </remarks>
     public class Header
     {
         /// <summary>
@@ -18,10 +20,13 @@ namespace Compression
         short height,
               width;
         /// <summary>
-        /// Y, Cb and Cr data length saved to the file. Because these are
+        /// Y, Cb and Cr data length saved to the file.
+        /// </summary>
+        /// <remarks>
+        /// Because these are
         /// run in RLE, it is "necessary" (definately another way to read)
         /// the data into the final data object.
-        /// </summary>
+        /// </remarks>
         int ylen,
             cblen,
             crlen;

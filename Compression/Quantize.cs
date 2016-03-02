@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 namespace Compression
 {
     /// <summary>
-    /// Quantize class
-    /// This class takes in the data object to read the quantize data.
+    /// Quantizes the data in the Data object.
     /// </summary>
     class Quantize
     {
@@ -25,6 +24,7 @@ namespace Compression
             { 49, 64, 78, 87, 103, 121, 120, 101 },
             { 72, 92, 95, 98, 112, 100, 103, 99 }
         };
+        
         /// <summary>
         /// Chroma Quantization data table
         /// </summary>
@@ -38,8 +38,8 @@ namespace Compression
             { 99, 99, 99, 99, 99, 99, 99, 99 },
             { 99, 99, 99, 99, 99, 99, 99, 99 }
         };
+
         /// <summary>
-        /// Quantize Chroma Data
         /// Quantize the chroma data.
         /// </summary>
         /// <param name="data">Chroma data to quantize</param>
@@ -56,8 +56,8 @@ namespace Compression
             }
             return output;
         }
+
         /// <summary>
-        /// Inverse Quantize Chroma Data
         /// Inverse quantize the chroma data.
         /// </summary>
         /// <param name="data">sbyte data to inverse quantize</param>
@@ -74,8 +74,8 @@ namespace Compression
             }
             return output;
         }
+
         /// <summary>
-        /// Quantize Luma Data
         /// Quantize the luma channel data.
         /// </summary>
         /// <param name="data">2D double array of data</param>
@@ -92,8 +92,8 @@ namespace Compression
             }
             return output;
         }
+
         /// <summary>
-        /// Inverse Quantize Luma Data
         /// Inverse quantize the luma data
         /// </summary>
         /// <param name="data">2D sbyte array of data</param>
