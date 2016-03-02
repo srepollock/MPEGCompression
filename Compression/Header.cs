@@ -30,7 +30,7 @@ namespace Compression
         /// to produce either better quality, worst compression, or the
         /// inverse.
         /// </summary>
-        byte quality;
+        byte quality = 0;
         /// <summary>
         /// Default constructor
         /// </summary>

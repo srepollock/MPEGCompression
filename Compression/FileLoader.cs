@@ -555,10 +555,10 @@ namespace Compression
         {
             file.Write(header.getHeight());
             file.Write(header.getWidth());
+            file.Write(header.getQuality());
             file.Write(header.getYlen());
             file.Write(header.getCblen());
             file.Write(header.getCrlen());
-            file.Write(header.getQuality());
         }
         /// <summary>
         /// Write Data
@@ -589,10 +589,10 @@ namespace Compression
         {
             header.setHeight(file.ReadInt16());
             header.setWidth(file.ReadInt16());
+            header.setQuality(file.ReadByte());
             header.setYlen(file.ReadInt32());
             header.setCblen(file.ReadInt32());
             header.setCrlen(file.ReadInt32());
-            header.setQuality(file.ReadByte());
         }
         /// <summary>
         /// Read Data
