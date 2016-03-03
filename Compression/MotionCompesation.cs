@@ -46,7 +46,11 @@ namespace Compression
                         for (int l = 0; l < N - 1; l++)
                         {
                             // C is the Target Frame, R is the Reference Frame
-                            diff += Math.Abs(C[x + k, y + 1] - R[x + i + k, y + j + l]);
+                            if (x + k >= 0 && y + l >= 0 && x + i + k >= 0 && y + j + l >= 0)
+                            {
+                                // also check if we have gone out of bounds, don't add
+                                diff += Math.Abs(C[x + k, y + l] - R[x + i + k, y + j + l]);
+                            }
                         }
                     }
                     madAr[i, j] = (int)(diff * (1 / Math.Pow(N, 2)));
@@ -64,10 +68,9 @@ namespace Compression
         /// </remarks>
         /// <param name="p">Size of the search area (2 * p + 1)</param>
         /// <param name="madAr">Mean Average Difference array (already calculated)</param>
-        public void seqMVSearch(int p, int[,] madAr)
+        public void seqMVSearch(int p, int[,] madAr, int u, int v)
         {
             int minMAD = int.MaxValue; // Init
-            int u = -1, v = -1;
             for(int i = -p; i < p; i++)
             {
                 for(int j = -p; j < p; j++)

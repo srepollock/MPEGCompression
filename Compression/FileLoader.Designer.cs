@@ -44,6 +44,11 @@
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.motionVectorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadImage1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadImage2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.calculateMotionVectorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.clearPicturesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -65,7 +70,7 @@
             this.tableLayoutPanel1.Controls.Add(this.pictureBox3, 1, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 38);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
@@ -77,7 +82,7 @@
             // 
             this.pictureBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox2.Location = new System.Drawing.Point(905, 4);
-            this.pictureBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox2.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(893, 479);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -88,7 +93,7 @@
             // 
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox1.Location = new System.Drawing.Point(4, 4);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(893, 479);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -105,7 +110,7 @@
             this.flowLayoutPanel1.Controls.Add(this.ShowCrButton);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(6, 493);
-            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(6);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(889, 475);
             this.flowLayoutPanel1.TabIndex = 2;
@@ -113,7 +118,7 @@
             // fileNameBox
             // 
             this.fileNameBox.Location = new System.Drawing.Point(4, 4);
-            this.fileNameBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.fileNameBox.Margin = new System.Windows.Forms.Padding(4);
             this.fileNameBox.Name = "fileNameBox";
             this.fileNameBox.ReadOnly = true;
             this.fileNameBox.Size = new System.Drawing.Size(501, 29);
@@ -122,7 +127,7 @@
             // rgbChangeButton
             // 
             this.rgbChangeButton.Location = new System.Drawing.Point(513, 4);
-            this.rgbChangeButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.rgbChangeButton.Margin = new System.Windows.Forms.Padding(4);
             this.rgbChangeButton.Name = "rgbChangeButton";
             this.rgbChangeButton.Size = new System.Drawing.Size(174, 57);
             this.rgbChangeButton.TabIndex = 7;
@@ -133,7 +138,7 @@
             // showYCbCrButton
             // 
             this.showYCbCrButton.Location = new System.Drawing.Point(695, 4);
-            this.showYCbCrButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.showYCbCrButton.Margin = new System.Windows.Forms.Padding(4);
             this.showYCbCrButton.Name = "showYCbCrButton";
             this.showYCbCrButton.Size = new System.Drawing.Size(174, 57);
             this.showYCbCrButton.TabIndex = 11;
@@ -144,7 +149,7 @@
             // ShowYButton
             // 
             this.ShowYButton.Location = new System.Drawing.Point(4, 69);
-            this.ShowYButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.ShowYButton.Margin = new System.Windows.Forms.Padding(4);
             this.ShowYButton.Name = "ShowYButton";
             this.ShowYButton.Size = new System.Drawing.Size(174, 57);
             this.ShowYButton.TabIndex = 8;
@@ -155,7 +160,7 @@
             // showCbButton
             // 
             this.showCbButton.Location = new System.Drawing.Point(186, 69);
-            this.showCbButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.showCbButton.Margin = new System.Windows.Forms.Padding(4);
             this.showCbButton.Name = "showCbButton";
             this.showCbButton.Size = new System.Drawing.Size(174, 57);
             this.showCbButton.TabIndex = 10;
@@ -166,7 +171,7 @@
             // ShowCrButton
             // 
             this.ShowCrButton.Location = new System.Drawing.Point(368, 69);
-            this.ShowCrButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.ShowCrButton.Margin = new System.Windows.Forms.Padding(4);
             this.ShowCrButton.Name = "ShowCrButton";
             this.ShowCrButton.Size = new System.Drawing.Size(174, 57);
             this.ShowCrButton.TabIndex = 9;
@@ -178,7 +183,7 @@
             // 
             this.pictureBox3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox3.Location = new System.Drawing.Point(907, 493);
-            this.pictureBox3.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.pictureBox3.Margin = new System.Windows.Forms.Padding(6);
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.Size = new System.Drawing.Size(889, 475);
             this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -202,6 +207,8 @@
             this.loadToolStripMenuItem,
             this.saveToolStripMenuItem,
             this.toolStripMenuItem1,
+            this.motionVectorsToolStripMenuItem,
+            this.toolStripMenuItem2,
             this.clearPicturesToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(56, 34);
@@ -210,26 +217,62 @@
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(240, 34);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(246, 34);
             this.loadToolStripMenuItem.Text = "&Load";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(240, 34);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(246, 34);
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(237, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(243, 6);
+            // 
+            // motionVectorsToolStripMenuItem
+            // 
+            this.motionVectorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.loadImage1ToolStripMenuItem,
+            this.loadImage2ToolStripMenuItem,
+            this.calculateMotionVectorsToolStripMenuItem});
+            this.motionVectorsToolStripMenuItem.Name = "motionVectorsToolStripMenuItem";
+            this.motionVectorsToolStripMenuItem.Size = new System.Drawing.Size(246, 34);
+            this.motionVectorsToolStripMenuItem.Text = "Motion Vectors";
+            // 
+            // loadImage1ToolStripMenuItem
+            // 
+            this.loadImage1ToolStripMenuItem.Name = "loadImage1ToolStripMenuItem";
+            this.loadImage1ToolStripMenuItem.Size = new System.Drawing.Size(337, 34);
+            this.loadImage1ToolStripMenuItem.Text = "Load Image 1";
+            this.loadImage1ToolStripMenuItem.Click += new System.EventHandler(this.loadImage1ToolStripMenuItem_Click_1);
+            // 
+            // loadImage2ToolStripMenuItem
+            // 
+            this.loadImage2ToolStripMenuItem.Name = "loadImage2ToolStripMenuItem";
+            this.loadImage2ToolStripMenuItem.Size = new System.Drawing.Size(337, 34);
+            this.loadImage2ToolStripMenuItem.Text = "Load Image 2";
+            this.loadImage2ToolStripMenuItem.Click += new System.EventHandler(this.loadImage2ToolStripMenuItem_Click);
+            // 
+            // calculateMotionVectorsToolStripMenuItem
+            // 
+            this.calculateMotionVectorsToolStripMenuItem.Name = "calculateMotionVectorsToolStripMenuItem";
+            this.calculateMotionVectorsToolStripMenuItem.Size = new System.Drawing.Size(337, 34);
+            this.calculateMotionVectorsToolStripMenuItem.Text = "Calculate Motion Vectors";
+            this.calculateMotionVectorsToolStripMenuItem.Click += new System.EventHandler(this.calculateMotionVectorsToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(243, 6);
             // 
             // clearPicturesToolStripMenuItem
             // 
             this.clearPicturesToolStripMenuItem.Name = "clearPicturesToolStripMenuItem";
-            this.clearPicturesToolStripMenuItem.Size = new System.Drawing.Size(240, 34);
+            this.clearPicturesToolStripMenuItem.Size = new System.Drawing.Size(246, 34);
             this.clearPicturesToolStripMenuItem.Text = "Clear Pictures";
             this.clearPicturesToolStripMenuItem.Click += new System.EventHandler(this.clearPicturesToolStripMenuItem_Click);
             // 
@@ -241,7 +284,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "FileLoader";
             this.Text = "Form1";
             this.tableLayoutPanel1.ResumeLayout(false);
@@ -276,6 +319,11 @@
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem clearPicturesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem calculateMotionVectorsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadImage2ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadImage1ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem motionVectorsToolStripMenuItem;
     }
 }
 

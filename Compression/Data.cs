@@ -85,6 +85,9 @@ namespace Compression
         /// </summary>
         public Header gHead = new Header();
 
+        public Header mv1Head = new Header();
+        public Header mv2Head = new Header();
+
         /// <summary>
         /// Gets Y Bitmap
         /// </summary>
@@ -193,6 +196,22 @@ namespace Compression
                 }
             }
             return outBmp;
+        }
+
+        /// <summary>
+        /// Initializes the YCbCr double byte array.
+        /// </summary>
+        public Color[,] createYCbCrArray(Header head, byte[,] luma, byte[,] cb, byte[,] cr)
+        {
+            Color[,] output = new Color[head.getWidth(), head.getHeight()];
+            for(int x = 0; x < head.getWidth(); x++)
+            {
+                for(int y = 0; y < head.getHeight(); y++)
+                {
+                    output[x, y] = Color.FromArgb(luma[x, y], cb[x, y], cr[x, y]);
+                }
+            }
+            return output;
         }
 
         /// <summary>

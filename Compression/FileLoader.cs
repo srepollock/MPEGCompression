@@ -51,6 +51,7 @@ namespace Compression
             ShowCrButton.Enabled = false;
             showYCbCrButton.Enabled = false;
             saveToolStripMenuItem.Enabled = false;
+            calculateMotionVectorsToolStripMenuItem.Enabled = false;
         }
         /// <summary>
         /// Load in the files specified by the user. 
@@ -128,6 +129,7 @@ namespace Compression
             ShowCrButton.Enabled = false;
             showYCbCrButton.Enabled = false;
             saveToolStripMenuItem.Enabled = false;
+            clearPicturesToolStripMenuItem.Enabled = false;
             fileNameBox.Text = null;
             dataObj = new Data();
         }
@@ -260,6 +262,73 @@ namespace Compression
             pictureBox2.Image = dataObj.generateBitmap();
         }
         /// <summary>
+        /// Loads image into picturebox1 for MotionVectors only.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void loadImage1ToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "BMP Files|*.bmp|JPG Files|*.jpg|PNG Files|*.png|RIPPEG Files|*.rippeg|All Files|*.*";
+            DialogResult result = openFileDialog.ShowDialog(); // I want to open this to the child window in the file
+            if (result == DialogResult.OK) // checks if the result returned true
+            {
+                string ext = Path.GetExtension(openFileDialog.FileName); // includes the period
+                if (ext == ".rippeg")
+                {
+                    openFile(openFileDialog.FileName, pictureBox1);
+                    dataObj.mv1Head.setHeight((short)pictureBox1.Image.Height);
+                    dataObj.mv1Head.setWidth((short)pictureBox1.Image.Width);
+                }
+                else
+                {
+                    pictureBox1.Image = Image.FromFile(openFileDialog.FileName);
+                    dataObj.mv1Head.setHeight((short)pictureBox1.Image.Height);
+                    dataObj.mv1Head.setWidth((short)pictureBox1.Image.Width);
+                }
+                if (pictureBox1.Image != null && pictureBox2.Image != null)
+                    calculateMotionVectorsToolStripMenuItem.Enabled = true;
+            }
+        }
+        /// <summary>
+        /// Loads image into picturebox2 for MotionVectors only.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void loadImage2ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "BMP Files|*.bmp|JPG Files|*.jpg|PNG Files|*.png|RIPPEG Files|*.rippeg|All Files|*.*";
+            DialogResult result = openFileDialog.ShowDialog(); // I want to open this to the child window in the file
+            if (result == DialogResult.OK) // checks if the result returned true
+            {
+                string ext = Path.GetExtension(openFileDialog.FileName); // includes the period
+                if (ext == ".rippeg")
+                {
+                    openFile(openFileDialog.FileName, pictureBox2);
+                    dataObj.mv2Head.setHeight((short)pictureBox2.Image.Height);
+                    dataObj.mv2Head.setWidth((short)pictureBox2.Image.Width);
+                }
+                else
+                {
+                    pictureBox2.Image = Image.FromFile(openFileDialog.FileName);
+                    dataObj.mv2Head.setHeight((short)pictureBox2.Image.Height);
+                    dataObj.mv2Head.setWidth((short)pictureBox2.Image.Width);
+                }
+                if (pictureBox1.Image != null && pictureBox2.Image != null)
+                    calculateMotionVectorsToolStripMenuItem.Enabled = true;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void calculateMotionVectorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Picture box 3 will show the motion vectors
+        }
+        /// <summary>
         /// Sets final data array with Y + Cb + Cr data (in order) after being RLE'ed
         /// </summary>
         /// <remarks>
@@ -360,6 +429,15 @@ namespace Compression
             pictureBox3.Image = dataObj.getYCbCrBitmap(dataObj.gHead);
         }
         /// <summary>
+        /// Calculates motion vectors based on display 1 and 2
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void motionVectorButton_Click(object sender, EventArgs e)
+        {
+
+        }
+        /// <summary>
         /// Saves the YCbCr RLE'ed data to the file name with the gHead in the
         /// data object.
         /// </summary>
@@ -389,6 +467,7 @@ namespace Compression
         /// <remarks>
         /// This opens the file of the specified name. This will only be
         /// called on files that end with *.rippeg. (Why? Because it's funny)
+        /// Defaults to pictureBox2
         /// </remarks>
         /// <param name="fileName">File name to load data from</param>
         public void openFile(string fileName)
@@ -474,6 +553,99 @@ namespace Compression
             dataChanger.sYCbCrtoRGB(ref dataObj);
             dataChanger = new RGBChanger();
             pictureBox2.Image = dataObj.generateBitmap();
+        }
+        /// <summary>
+        /// Opens the file into the picture box.
+        /// </summary>
+        /// <remarks>
+        /// This opens the file of the specified name. This will only be
+        /// called on files that end with *.rippeg. (Why? Because it's funny)
+        /// Saves it to the specified picture box.
+        /// </remarks>
+        /// <param name="fileName">File name to load data from</param>
+        public void openFile(string fileName, PictureBox pb)
+        {
+            this.Text = fileName; // sets the text of the form to the file name
+            BinaryReader re = new BinaryReader(File.OpenRead(fileName));
+            // setup the header information
+            readData(re, dataObj.gHead);
+
+            Pad padding = new Pad(ref dataObj);
+
+            dataObj.finalData = new sbyte[dataObj.gHead.getYlen() + dataObj.gHead.getCblen() + dataObj.gHead.getCrlen()];
+            dataObj.yEncoded = new sbyte[dataObj.gHead.getYlen()];
+            dataObj.cbEncoded = new sbyte[dataObj.gHead.getCblen()];
+            dataObj.crEncoded = new sbyte[dataObj.gHead.getCrlen()];
+            dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setCbData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setCrData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setdyData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdCbData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setdCrData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            // read the data
+            readData(re, dataObj.gHead, dataObj.finalData);
+            // split the data
+            splitFinalData();
+            // unrle the data
+            dataObj.yEncoded = RLE.unrle(dataObj.yEncoded);
+            dataObj.cbEncoded = RLE.unrle(dataObj.cbEncoded);
+            dataObj.crEncoded = RLE.unrle(dataObj.crEncoded);
+
+            sbyte[] tempY, tempCb, tempCr;
+            sbyte[,] stempY, stempCb, stempCr;
+            double[,] tempDY, tempDCb, tempDCr;
+            int pos = 0;
+            for (int y = 0; y < dataObj.paddedHeight; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth; x += 8)
+                {
+                    // DCT, Quantize, ZigZag and RLE
+                    // Y
+                    // block
+                    tempY = block.generateBlocks(dataObj.yEncoded, pos); // put in x, y here for cool spirals
+                    // unzigzag
+                    stempY = zz.unzigzag(tempY);
+                    // inverse quantize
+                    tempDY = q.inverseQuantizeLuma(stempY);
+                    tempDY = dctObj.dinverseDCT(tempDY);
+                    block.putbackd(dataObj.getdyData(), tempDY, x, y);
+                    pos += 64;
+                }
+            }
+            pos = 0;
+            for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
+                {
+                    // Cb
+                    // block
+                    tempCb = block.generateBlocks(dataObj.cbEncoded, pos);
+                    // unzigzag
+                    stempCb = zz.unzigzag(tempCb);
+                    // inverse quantize
+                    tempDCb = q.inverseQuantizeData(stempCb);
+                    tempDCb = dctObj.dinverseDCT(tempDCb);
+                    block.putbackd(dataObj.getdCbData(), tempDCb, x, y);
+
+                    // Cr
+                    // block
+                    tempCr = block.generateBlocks(dataObj.crEncoded, pos);
+                    // unzigzag
+                    stempCr = zz.unzigzag(tempCr);
+                    // inverse quantize
+                    tempDCr = q.inverseQuantizeData(stempCr);
+                    tempDCr = dctObj.dinverseDCT(tempDCr);
+                    block.putbackd(dataObj.getdCrData(), tempDCr, x, y);
+                    pos += 64;
+                }
+            }
+            re.Close();
+            // set pixels
+            dataObj.setdCbData(Sampler.upsample(dataObj.dCbData, ref dataObj));
+            dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
+            dataChanger.sYCbCrtoRGB(ref dataObj);
+            dataChanger = new RGBChanger();
+            pb.Image = dataObj.generateBitmap();
         }
         /// <summary>
         /// Writes the header data to the file
