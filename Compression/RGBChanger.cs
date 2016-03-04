@@ -78,6 +78,72 @@ namespace Compression
         }
 
         /// <summary>
+        /// Changes RGB to YCbCr and saves the data into the Data object.
+        /// </summary>
+        /// <remarks>
+        /// RGB -> YCbCr
+        /// Takes in the bitmap of the original image, then changes the image
+        /// to YCbCr data.
+        /// Then returns the YCbCr data.
+        /// </remarks>
+        /// <param name="orgBmp">Original bitmap to base the image off</param>
+        /// <param name="dataObj">Data object to save the data to</param>
+        /// <param name="num">Number of the image to read in the data</param>
+        public void RGBtoYCbCr(Bitmap orgBmp, ref Data dataObj, int num)
+        {
+            Bitmap bmp = orgBmp;
+
+            int width = dataObj.gHead.getWidth();
+            int height = dataObj.gHead.getHeight();
+            byte[,] yData = new byte[width, height];                     //luma
+            byte[,] CbData = new byte[width, height];                     //Cb
+            byte[,] CrData = new byte[width, height];                     //Cr
+            Color[,] YCbCrData = new Color[width, height];
+
+            unsafe
+            {
+                BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, bmp.PixelFormat);
+                int heightInPixels = bitmapData.Height;
+                int widthInBytes = width * 3;
+                byte* ptrFirstPixel = (byte*)bitmapData.Scan0;
+
+                //Convert to YCbCr
+                for (int y = 0; y < heightInPixels; y++)
+                {
+                    byte* currentLine = ptrFirstPixel + (y * bitmapData.Stride);
+                    for (int x = 0; x < width; x++)
+                    {
+                        int xPor3 = x * 3;
+                        float blue = currentLine[xPor3++];
+                        float green = currentLine[xPor3++];
+                        float red = currentLine[xPor3];
+
+                        yData[x, y] = (byte)(0 + (0.299 * red) + (0.587 * green) + (0.114 * blue));
+                        CbData[x, y] = (byte)(128 - (0.168 * red) - (0.331264 * green) + (0.5 * blue));
+                        CrData[x, y] = (byte)(128 + (0.5 * red) - (0.418688 * green) - (0.081312 * blue));
+
+                        YCbCrData[x, y] = Color.FromArgb(yData[x, y], CbData[x, y], CrData[x, y]);
+                    }
+                }
+                bmp.UnlockBits(bitmapData);
+            }
+            if(num == 1)
+            {
+                dataObj.setyData(yData);
+                dataObj.setCbData(CbData);
+                dataObj.setCrData(CrData);
+                dataObj.setYCrCbData(YCbCrData);
+            }
+            else if(num == 2)
+            {
+                dataObj.setyData2(yData);
+                dataObj.setCbData2(CbData);
+                dataObj.setCrData2(CrData);
+                dataObj.setYCrCbData2(YCbCrData);
+            }
+        }
+
+        /// <summary>
         /// Changes YCbCr data back into RGB data and saves it to the Data
         /// object.
         /// </summary>

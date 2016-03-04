@@ -39,6 +39,9 @@ namespace Compression
         public byte[,] yData;
         public byte[,] CbData;
         public byte[,] CrData;
+        public byte[,] yData2;
+        public byte[,] CbData2;
+        public byte[,] CrData2;
         public double[,] dyData;
         public double[,] dCbData;
         public double[,] dCrData;
@@ -52,7 +55,8 @@ namespace Compression
         /// <summary>
         /// Private data for YCbCr data
         /// </summary>
-        Color[,] YCbCrData;
+        public Color[,] YCbCrData;
+        public Color[,] YCbCrData2;
         /// <summary>
         /// Private Forward DCT data as doubles
         /// </summary>
@@ -199,6 +203,26 @@ namespace Compression
         }
 
         /// <summary>
+        /// Generates the Bitmap for the image data
+        /// </summary>
+        /// <remarks>
+        /// Generates the bitmap for the image
+        /// </remarks>
+        /// <returns></returns>
+        public Bitmap generateBitmap(Color[,] data)
+        {
+            Bitmap outBmp = new Bitmap(gHead.getWidth(), gHead.getHeight());
+            for (int y = 0; y < gHead.getHeight(); y++)
+            {
+                for (int x = 0; x < gHead.getWidth(); x++)
+                {
+                    outBmp.SetPixel(x, y, data[x,y]);
+                }
+            }
+            return outBmp;
+        }
+
+        /// <summary>
         /// Initializes the YCbCr double byte array.
         /// </summary>
         public Color[,] createYCbCrArray(Header head, byte[,] luma, byte[,] cb, byte[,] cr)
@@ -227,6 +251,9 @@ namespace Compression
         public byte[,] getyData() { return this.yData; }
         public byte[,] getCbData() { return this.CbData; }
         public byte[,] getCrData() { return this.CrData; }
+        public byte[,] getyData2() { return this.yData2; }
+        public byte[,] getCbData2() { return this.CbData2; }
+        public byte[,] getCrData2() { return this.CrData2; }
         public double[,] getdyData() { return this.dyData; }
         public double[,] getdCbData() { return this.dCbData; }
         public double[,] getdCrData() { return this.dCrData; }
@@ -234,6 +261,7 @@ namespace Compression
         public byte[,] getgData() { return this.gData; }
         public byte[,] getbData() { return this.bData; }
         public Color[,] getYCrCbData() { return this.YCbCrData; }
+        public Color[,] getYCrCbData2() { return this.YCbCrData2; }
 
         /// <summary>
         /// Setters for all the data variables
@@ -248,6 +276,9 @@ namespace Compression
         public void setyData(byte[,] data) { this.yData = data; }
         public void setCbData(byte[,] data) { this.CbData = data; }
         public void setCrData(byte[,] data) { this.CrData = data; }
+        public void setyData2(byte[,] data) { this.yData2 = data; }
+        public void setCbData2(byte[,] data) { this.CbData2 = data; }
+        public void setCrData2(byte[,] data) { this.CrData2 = data; }
         public void setdyData(double[,] data) { this.dyData = data; }
         public void setdCbData(double[,] data) { this.dCbData = data; }
         public void setdCrData(double[,] data) { this.dCrData = data; }
@@ -255,5 +286,6 @@ namespace Compression
         public void setgData(byte[,] data) { this.gData = data; }
         public void setbData(byte[,] data) { this.bData = data; }
         public void setYCrCbData(Color[,] data) { this.YCbCrData = data; }
+        public void setYCrCbData2(Color[,] data) { this.YCbCrData2 = data; }
     }
 }

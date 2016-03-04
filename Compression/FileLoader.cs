@@ -326,7 +326,36 @@ namespace Compression
         /// <param name="e"></param>
         private void calculateMotionVectorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Picture box 3 will show the motion vectors
+            // need to get YCbCr data of img 1 and 2
+            // Image 1
+                // data saved into the Data.yData, cbData, crData
+            // Image 2
+                // data saved into the Data.yData2, cbData2, crData2
+            dataChanger.RGBtoYCbCr((Bitmap)pictureBox1.Image, ref dataObj, 1);
+            dataChanger.RGBtoYCbCr((Bitmap)pictureBox2.Image, ref dataObj, 2);
+            // Create bitmap for picturebox 3
+            Bitmap bmp = new Bitmap(dataObj.mv1Head.getWidth(), dataObj.mv1Head.getHeight());
+
+            // Current is picturebox2 (C Frame) (right image)
+            // Reference is picturebox1 (R Frame) (left image)
+                // data is YCbCr data
+                // how big are the macroblocks? Are these my 8x8 blocks? Ask Austin
+                    // Where does the MAD data go?
+                    // How do I decide on N, or p?
+            
+
+            MotionVector mv = new MotionVector();
+            
+            // draw lines where the changes are
+            using (var graphics = Graphics.FromImage(bmp))
+            {
+                Pen blackPen = new Pen(Color.Black, 3);
+                // just draw the motion vector(x,y)(x1,y1) coords
+                graphics.DrawLine(blackPen, mv.x1, mv.y1, mv.x2, mv.y2);
+            }
+
+            // Set bitmap for picturebox3
+            pictureBox3.Image = bmp;
         }
         /// <summary>
         /// Sets final data array with Y + Cb + Cr data (in order) after being RLE'ed
