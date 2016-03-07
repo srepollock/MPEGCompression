@@ -134,6 +134,7 @@ namespace Compression
             saveToolStripMenuItem.Enabled = false;
             clearPicturesToolStripMenuItem.Enabled = false;
             fileNameBox.Text = null;
+            calculateMotionVectorsToolStripMenuItem.Enabled = false;
             dataObj = new Data();
         }
 
@@ -353,26 +354,63 @@ namespace Compression
             Pad padding = new Pad(ref dataObj, 1);
             dataObj.yData = padding.padData(dataObj.yData, padding.padW, padding.padH, dataObj, 1);
             dataObj.yData2 = padding.padData(dataObj.yData2, padding.padW, padding.padH, dataObj, 2);
-            MotionVector[] mvArray = new MotionVector[(dataObj.paddedWidth / 16) * (dataObj.paddedHeight / 16)];
+            MotionVector[] mvLArr = new MotionVector[(dataObj.paddedWidth / 8) * (dataObj.paddedHeight / 8)];
+            dataObj.CbData = padding.padData(dataObj.CbData, padding.padW, padding.padH, dataObj, 1);
+            dataObj.CbData2 = padding.padData(dataObj.CbData2, padding.padW, padding.padH, dataObj, 2);
+            MotionVector[] mvCbArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
+            dataObj.CrData = padding.padData(dataObj.CrData, padding.padW, padding.padH, dataObj, 1);
+            dataObj.CrData2 = padding.padData(dataObj.CrData2, padding.padW, padding.padH, dataObj, 2);
+            MotionVector[] mvCrArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
+            dataObj.CbData = Sampler.subsample(dataObj.CbData, ref dataObj);
+            dataObj.CbData2 = Sampler.subsample(dataObj.CbData2, ref dataObj);
+            dataObj.CrData = Sampler.subsample(dataObj.CrData, ref dataObj);
+            dataObj.CrData2 = Sampler.subsample(dataObj.CrData2, ref dataObj);
 
             int z = 0;
-            for(int x = 0; x < dataObj.paddedWidth; x+=16)
+            for(int x = 0; x < dataObj.paddedWidth; x+=8)
             {
-                for(int y = 0; y < dataObj.paddedHeight; y+=16)
+                for(int y = 0; y < dataObj.paddedHeight; y+=8)
                 {
                     // luma first
-                    mvArray[z++] = MotionCompesation.seqMVSearch(16, 16, dataObj.yData, dataObj.yData2, x, y, dataObj);
+                    mvLArr[z++] = MotionCompesation.seqMVSearch(8, 8, dataObj.yData, dataObj.yData2, x, y, dataObj);
                 }
             }
-            
+            z = 0;
+            for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
+            {
+                for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
+                {
+                    mvCbArr[z] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CbData, dataObj.CbData2, x, y, dataObj);
+                    mvCrArr[z++] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CrData, dataObj.CrData2, x, y, dataObj);
+                }
+            }
+
             // draw lines where the changes are
             using (var graphics = Graphics.FromImage(bmp))
             {
                 Pen blackPen = new Pen(Color.Black, 1);
                 // just draw the motion vector(x,y)(x1,y1) coords
-                foreach(MotionVector vec in mvArray)
-                   graphics.DrawLine(blackPen, vec.x, vec.y, vec.u, vec.v);
+                foreach(MotionVector vec in mvLArr)
+                   graphics.DrawLine(blackPen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
             }
+            /*
+            // draw lines where the changes are
+            using (var graphics = Graphics.FromImage(bmp))
+            {
+                Pen bluePen = new Pen(Color.Blue, 1);
+                // just draw the motion vector(x,y)(x1,y1) coords
+                foreach (MotionVector vec in mvCbArr)
+                    graphics.DrawLine(bluePen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
+            }
+            // draw lines where the changes are
+            using (var graphics = Graphics.FromImage(bmp))
+            {
+                Pen redPen = new Pen(Color.Red, 1);
+                // just draw the motion vector(x,y)(x1,y1) coords
+                foreach (MotionVector vec in mvCrArr)
+                    graphics.DrawLine(redPen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
+            }
+            */
 
             // Set bitmap for picturebox3
             pictureBox3.Image = bmp;

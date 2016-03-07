@@ -52,6 +52,7 @@ namespace Compression
                 dataObj.paddedHeight = dataObj.gHead.getHeight();
             }
         }
+
         /// <summary>
         /// Constructor to create the padding informmation from based on the picture number
         /// </summary>

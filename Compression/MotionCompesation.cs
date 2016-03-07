@@ -92,5 +92,48 @@ namespace Compression
             mv = new MotionVector(x, y, u, v);
             return mv;
         }
+
+        /// <summary>
+        /// Sequential Motion Vector Search
+        /// </summary>
+        /// <remarks>
+        /// This will sequentiall search the whole (2p + 1) * (2p + 1) window
+        /// in the Reference frame.
+        /// </remarks>
+        /// <param name="N">Size of the macroblock</param>
+        /// <param name="p">Size of the search area (2 * p + 1)</param>
+        /// <param name="C">Target (current) frame</param>
+        /// <param name="R">Reference frame</param>
+        /// <param name="x">Origin of the macroblock</param>
+        /// <param name="y">Origin of the macroblock</param>
+        /// <param name="dataObj">Data object to get the width and height from</param>
+        /// <returns>MotionVector with the coords of the (x,y) origin and where to (u,v) difference is</returns>
+        public static MotionVector chromaSeqMVSearch(int N, int p, byte[,] C, byte[,] R, int x, int y, Data dataObj)
+        {
+            int u = x, v = y; // Vector (x-u, y-v), set to origin point initially
+            MotionVector mv;
+            double minDiff = MAD(N, p, C, R, x, y, x, y); // Init
+            for (int i = x - p; i < x + p; i++)
+            {
+                if (i < 0 || i + N > dataObj.paddedWidth / 2) continue;
+                for (int j = y - p; j < y + p; j++)
+                {
+                    if (j < 0 || j + N > dataObj.paddedHeight / 2) continue;
+                    double curDiff = MAD(N, p, C, R, x, y, i, j);
+                    if (Math.Abs(curDiff) < Math.Abs(minDiff))
+                    {
+                        minDiff = curDiff;
+                        u = i; // get the coords for MV
+                        v = j;
+                    }
+                }
+            }
+            if (u == x && v == y)
+            {
+                u = x + 1;
+            }
+            mv = new MotionVector(x, y, u, v);
+            return mv;
+        }
     }
 }
