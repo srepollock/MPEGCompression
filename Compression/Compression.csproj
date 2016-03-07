@@ -58,6 +58,7 @@
     </Compile>
     <Compile Include="Header.cs" />
     <Compile Include="MotionCompesation.cs" />
+    <Compile Include="MotionVector.cs" />
     <Compile Include="Pad.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

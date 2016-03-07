@@ -52,6 +52,54 @@ namespace Compression
                 dataObj.paddedHeight = dataObj.gHead.getHeight();
             }
         }
+        /// <summary>
+        /// Constructor to create the padding informmation from based on the picture number
+        /// </summary>
+        /// <param name="dataObj">Data object to read the information to and from.</param>
+        /// <param name="picNum">Which picture header information to read from.</param>
+        public Pad(ref Data dataObj, int picNum)
+        {
+            if(picNum == 1)
+            {
+                modH = dataObj.mv1Head.getHeight() % 16;
+                modW = dataObj.mv1Head.getWidth() % 16; // array is 1 # less for each
+            }
+            else
+            {
+                modH = dataObj.mv2Head.getHeight() % 16;
+                modW = dataObj.mv2Head.getWidth() % 16; // array is 1 # less for each
+            }
+            padW = 0;
+            padH = 0;
+            if (modW != 0 || modH != 0)
+            {
+                padW = (16 - modW == 16) ? 0 : 16 - modW;
+                padH = (16 - modH == 16) ? 0 : 16 - modH;
+                if (picNum == 1)
+                {
+                    dataObj.paddedWidth = dataObj.mv1Head.getWidth() + padW;
+                    dataObj.paddedHeight = dataObj.mv1Head.getHeight() + padH;
+                }
+                else
+                {
+                    dataObj.paddedWidth = dataObj.mv2Head.getWidth() + padW;
+                    dataObj.paddedHeight = dataObj.mv2Head.getHeight() + padH;
+                }
+            }
+            else
+            {
+                if(picNum == 1)
+                {
+                    dataObj.paddedWidth = dataObj.mv1Head.getWidth();
+                    dataObj.paddedHeight = dataObj.mv1Head.getHeight();
+                }
+                else
+                {
+                    dataObj.paddedWidth = dataObj.mv2Head.getWidth();
+                    dataObj.paddedHeight = dataObj.mv2Head.getHeight();
+                }
+            }
+        }
 
         /// <summary>
         /// Pads the data taken in, and returns the new sized array.
@@ -69,6 +117,55 @@ namespace Compression
         public byte[,] padData(byte[,] data, int padxby, int padyby, Data dataObj)
         {
             int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
+            byte[,] temp = new byte[width + padxby, height + padyby];
+            for (int y = 0; y < height + padyby; y++)
+            {
+                for (int x = 0; x < width + padxby; x++)
+                {
+                    if (x >= width && y >= height)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (x >= width)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (y >= height)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else
+                    {
+                        temp[x, y] = data[x, y];
+                    }
+                }
+            }
+            return temp;
+        }
+
+        /// <summary>
+        /// Pads the data inside of the Data object based on the picture number
+        /// </summary>
+        /// /// <param name="data">Original data.</param>
+        /// <param name="padxby">Pad the width by x amount.</param>
+        /// <param name="padyby">Pad the height by y amount.</param>
+        /// /// <param name="dataObj">Data object to read in the width and height of the image.</param>
+        /// <param name="picNum">Picture number to read the width and height from.</param>
+        /// <returns>Padded data in a 2D byte array.</returns>
+        public byte[,] padData(byte[,] data, int padxby, int padyby, Data dataObj, int picNum)
+        {
+            int width, height;
+            if(picNum == 1)
+            {
+                width = dataObj.mv1Head.getWidth();
+                height = dataObj.mv1Head.getHeight();
+            }
+            else
+            {
+                width = dataObj.mv2Head.getWidth();
+                height = dataObj.mv2Head.getHeight();
+            }
+
             byte[,] temp = new byte[width + padxby, height + padyby];
             for (int y = 0; y < height + padyby; y++)
             {

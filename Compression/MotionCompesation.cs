@@ -28,35 +28,26 @@ namespace Compression
         /// <param name="R">Reference frame</param>
         /// <param name="x">Origin of the macroblock</param>
         /// <param name="y">Origin of the macroblock</param>
-        /// <returns>Mean Absolute Difference (double int array)</returns>
-        public int[,] MAD(int N, int p, byte[,] C, byte[,] R, int x, int y)
+        /// <param name="i">Where to move in the macroblock</param>
+        /// <param name="j">Where to move in the macroblock</param>
+        /// <returns>The mean absolute difference as a double</returns>
+        public static double MAD(int N, int p, byte[,] C, byte[,] R, int x, int y, int i, int j)
         {
                 // (x, y) is the upper left corner of the macroblock
             double diff; // difference calculated
-                // p is the size of the search area window
-            int[,] madAr = new int[2 * p, 2 * p];
                 // N is the size of the MACROBLOCK
-            for(int i = -p; i < p; i++)
-            {
-                for(int j = -p; j < p; j++)
-                {
                     diff = 0;
-                    for (int k = 0; k < N - 1; k++)
+                    for (int k = 0; k < N; k++)
                     {
-                        for (int l = 0; l < N - 1; l++)
+                        for (int l = 0; l < N; l++)
                         {
                             // C is the Target Frame, R is the Reference Frame
-                            if (x + k >= 0 && y + l >= 0 && x + i + k >= 0 && y + j + l >= 0)
-                            {
                                 // also check if we have gone out of bounds, don't add
-                                diff += Math.Abs(C[x + k, y + l] - R[x + i + k, y + j + l]);
-                            }
+                            diff += C[x + k, y + l] - R[i + k, j + l];
                         }
                     }
-                    madAr[i, j] = (int)(diff * (1 / Math.Pow(N, 2)));
-                }
-            }
-            return madAr;
+            diff = (1 / Math.Pow(N, 2)) * diff;
+            return diff;
         }
 
         /// <summary>
@@ -66,32 +57,40 @@ namespace Compression
         /// This will sequentiall search the whole (2p + 1) * (2p + 1) window
         /// in the Reference frame.
         /// </remarks>
+        /// <param name="N">Size of the macroblock</param>
         /// <param name="p">Size of the search area (2 * p + 1)</param>
-        /// <param name="madAr">Mean Average Difference array (already calculated)</param>
-        public void seqMVSearch(int p, int[,] madAr, int u, int v)
+        /// <param name="C">Target (current) frame</param>
+        /// <param name="R">Reference frame</param>
+        /// <param name="x">Origin of the macroblock</param>
+        /// <param name="y">Origin of the macroblock</param>
+        /// <param name="dataObj">Data object to get the width and height from</param>
+        /// <returns>MotionVector with the coords of the (x,y) origin and where to (u,v) difference is</returns>
+        public static MotionVector seqMVSearch(int N, int p, byte[,] C, byte[,]R, int x, int y, Data dataObj)
         {
-            int minMAD = int.MaxValue; // Init
-            for(int i = -p; i < p; i++)
+            int u = x, v = y; // Vector (x-u, y-v), set to origin point initially
+            MotionVector mv;
+            double minDiff = MAD(N, p, C, R, x, y, x, y); // Init
+            for(int i = x-p; i < x+p; i++)
             {
-                for(int j = -p; j < p; j++)
+                if (i < 0 || i + N > dataObj.paddedWidth) continue;
+                for(int j = y-p; j < y+p; j++)
                 {
-                    int curMAD = madAr[i, j];
-                    if(curMAD < minMAD)
+                    if (j < 0 || j + N > dataObj.paddedHeight) continue;
+                    double curDiff = MAD(N, p, C, R, x, y, i, j);
+                    if(Math.Abs(curDiff) < Math.Abs(minDiff))
                     {
-                        minMAD = curMAD;
+                        minDiff = curDiff;
                         u = i; // get the coords for MV
                         v = j;
                     }
                 }
             }
-            if(u == -1 || v == -1)
+            if(u == x && v == y)
             {
-                // cannot return
+                u = x + 1;
             }
-            else
-            {
-                // return MV
-            }
+            mv = new MotionVector(x, y, u, v);
+            return mv;
         }
     }
 }

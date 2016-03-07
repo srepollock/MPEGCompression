@@ -24,6 +24,7 @@ namespace Compression
         {
 
         }
+
         /// <summary>
         /// Checks if the number entered is 0, or 1.
         /// </summary>

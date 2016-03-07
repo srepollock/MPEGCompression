@@ -19,6 +19,7 @@ namespace Compression
         /// </summary>
         short height,
               width;
+
         /// <summary>
         /// Y, Cb and Cr data length saved to the file.
         /// </summary>
@@ -30,12 +31,14 @@ namespace Compression
         int ylen,
             cblen,
             crlen;
+
         /// <summary>
         /// Qulity can be set by multiplying this number into the chroma table
         /// to produce either better quality, worst compression, or the
         /// inverse.
         /// </summary>
         byte quality = 0;
+
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -43,6 +46,7 @@ namespace Compression
         {
 
         }
+
         /// <summary>
         /// Getters for the header information.
         /// </summary>
@@ -52,6 +56,7 @@ namespace Compression
         public int getCblen() { return this.cblen; }
         public int getCrlen() { return this.crlen; }
         public byte getQuality() { return this.quality; }
+
         /// <summary>
         /// Setters for the header information
         /// </summary>

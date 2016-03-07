@@ -78,7 +78,8 @@ namespace Compression
         }
 
         /// <summary>
-        /// Changes RGB to YCbCr and saves the data into the Data object.
+        /// Changes RGB to YCbCr and saves the data into the Data object. 
+        /// Depends on the image number
         /// </summary>
         /// <remarks>
         /// RGB -> YCbCr
@@ -88,13 +89,23 @@ namespace Compression
         /// </remarks>
         /// <param name="orgBmp">Original bitmap to base the image off</param>
         /// <param name="dataObj">Data object to save the data to</param>
-        /// <param name="num">Number of the image to read in the data</param>
-        public void RGBtoYCbCr(Bitmap orgBmp, ref Data dataObj, int num)
+        /// <param name="PicNum">Number of the image to read in the data</param>
+        public void RGBtoYCbCr(Bitmap orgBmp, ref Data dataObj, int picNum)
         {
             Bitmap bmp = orgBmp;
 
-            int width = dataObj.gHead.getWidth();
-            int height = dataObj.gHead.getHeight();
+            int width, height;
+
+            if(picNum == 1)
+            {
+                width = dataObj.mv1Head.getWidth();
+                height = dataObj.mv1Head.getHeight();
+            }
+            else
+            {
+                width = dataObj.mv2Head.getWidth();
+                height = dataObj.mv2Head.getHeight();
+            }
             byte[,] yData = new byte[width, height];                     //luma
             byte[,] CbData = new byte[width, height];                     //Cb
             byte[,] CrData = new byte[width, height];                     //Cr
@@ -127,14 +138,14 @@ namespace Compression
                 }
                 bmp.UnlockBits(bitmapData);
             }
-            if(num == 1)
+            if(picNum == 1)
             {
                 dataObj.setyData(yData);
                 dataObj.setCbData(CbData);
                 dataObj.setCrData(CrData);
                 dataObj.setYCrCbData(YCbCrData);
             }
-            else if(num == 2)
+            else if(picNum == 2)
             {
                 dataObj.setyData2(yData);
                 dataObj.setCbData2(CbData);

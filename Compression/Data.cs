@@ -24,10 +24,12 @@ namespace Compression
         /// Original bitmap
         /// </summary>
         private Bitmap original;
+
         /// <summary>
         /// RGB to YCrCb bitmap
         /// </summary>
         private Bitmap RGBtoYCrCb;
+
         /// <summary>
         /// YCrCb to RGB bitmap
         /// </summary>
@@ -52,15 +54,18 @@ namespace Compression
         byte[,] rData;
         byte[,] gData;
         byte[,] bData;
+
         /// <summary>
         /// Private data for YCbCr data
         /// </summary>
         public Color[,] YCbCrData;
         public Color[,] YCbCrData2;
+
         /// <summary>
         /// Private Forward DCT data as doubles
         /// </summary>
         double[,] forwardDCTData;
+
         /// <summary>
         /// Private Inverse DCT data as bytes
         /// </summary>
@@ -89,7 +94,14 @@ namespace Compression
         /// </summary>
         public Header gHead = new Header();
 
+        /// <summary>
+        /// Header for the motion vector image 1
+        /// </summary>
         public Header mv1Head = new Header();
+
+        /// <summary>
+        /// Header for the motion vector image 2
+        /// </summary>
         public Header mv2Head = new Header();
 
         /// <summary>
@@ -245,6 +257,7 @@ namespace Compression
         public Bitmap getRGBtoYCrCb() { return this.RGBtoYCrCb; }
         public Bitmap getYCrCbtoRGB() { return this.YCrCbtoRGB; }
         public double[,] getForwardDCTData() { return this.forwardDCTData; }
+
         //public double[,] getInverseDCTData() { return this.inverseDCTData; }
         //testing
         public byte[,] getInverseDCTData() { return this.inverseDCTData; }
@@ -270,6 +283,7 @@ namespace Compression
         public void setRGBtoYCrCb(Bitmap bmp) { this.RGBtoYCrCb = bmp; }
         public void setYCrCbtoRGB(Bitmap bmp) { this.YCrCbtoRGB = bmp; }
         public void setForwardDCTData(double[,] data) { this.forwardDCTData = data; }
+
         //public void setInverseDCTData(double[,] data) { this.inverseDCTData = data; }
         //testing
         public void setInverseDCTData(byte[,] data) { this.inverseDCTData = data; }

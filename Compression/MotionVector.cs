@@ -6,24 +6,52 @@ using System.Threading.Tasks;
 
 namespace Compression
 {
+    /// <summary>
+    /// MotionVector, holds the (x,y) of the origin, (u,v) of the change
+    /// </summary>
     class MotionVector
     {
-        public int x1;
-        public int y1;
-        public int x2;
-        public int y2;
+        /// <summary>
+        /// x of the origin
+        /// </summary>
+        public int x;
 
+        /// <summary>
+        /// y of the origin
+        /// </summary>
+        public int y;
+
+        /// <summary>
+        /// x of the change
+        /// </summary>
+        public int u;
+
+        /// <summary>
+        /// y of the change
+        /// </summary>
+        public int v;
+
+        /// <summary>
+        /// Constructor. No changes
+        /// </summary>
         public MotionVector()
         {
             
         }
 
-        public MotionVector(int x, int y, int xx, int yy)
+        /// <summary>
+        /// Constructor. Initializes data
+        /// </summary>
+        /// <param name="xx">x of the origin</param>
+        /// <param name="yy">y of the origin</param>
+        /// <param name="uu">x of the change</param>
+        /// <param name="vv">y of the change</param>
+        public MotionVector(int xx, int yy, int uu, int vv)
         {
-            x1 = x;
-            y1 = y;
-            x2 = xx;
-            y2 = yy;
+            x = xx;
+            y = yy;
+            u = uu;
+            v = vv;
         }
     }
 }

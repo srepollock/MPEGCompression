@@ -53,6 +53,7 @@ namespace Compression
             saveToolStripMenuItem.Enabled = false;
             calculateMotionVectorsToolStripMenuItem.Enabled = false;
         }
+
         /// <summary>
         /// Load in the files specified by the user. 
         /// </summary>
@@ -92,6 +93,7 @@ namespace Compression
                 showYCbCrButton.Enabled = false;
             }
         }
+
         /// <summary>
         /// This function opens a file save dialog.
         /// </summary>
@@ -110,6 +112,7 @@ namespace Compression
                 this.saveFile(saveFileDialog.FileName);
             }
         }
+
         /// <summary>
         /// Removes the pictures from all the picture boxes
         /// </summary>
@@ -133,6 +136,7 @@ namespace Compression
             fileNameBox.Text = null;
             dataObj = new Data();
         }
+
         /// <summary>
         /// Changes data from RGB to YCbCr and back, displays in picturebox2
         /// </summary>
@@ -261,6 +265,7 @@ namespace Compression
             saveToolStripMenuItem.Enabled = true;
             pictureBox2.Image = dataObj.generateBitmap();
         }
+
         /// <summary>
         /// Loads image into picturebox1 for MotionVectors only.
         /// </summary>
@@ -290,6 +295,7 @@ namespace Compression
                     calculateMotionVectorsToolStripMenuItem.Enabled = true;
             }
         }
+
         /// <summary>
         /// Loads image into picturebox2 for MotionVectors only.
         /// </summary>
@@ -319,6 +325,7 @@ namespace Compression
                     calculateMotionVectorsToolStripMenuItem.Enabled = true;
             }
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -334,29 +341,43 @@ namespace Compression
             dataChanger.RGBtoYCbCr((Bitmap)pictureBox1.Image, ref dataObj, 1);
             dataChanger.RGBtoYCbCr((Bitmap)pictureBox2.Image, ref dataObj, 2);
             // Create bitmap for picturebox 3
-            Bitmap bmp = new Bitmap(dataObj.mv1Head.getWidth(), dataObj.mv1Head.getHeight());
+            //Bitmap bmp = new Bitmap(dataObj.mv1Head.getWidth(), dataObj.mv1Head.getHeight());
+            Bitmap bmp = (Bitmap)pictureBox2.Image;
 
             // Current is picturebox2 (C Frame) (right image)
             // Reference is picturebox1 (R Frame) (left image)
-                // data is YCbCr data
-                // how big are the macroblocks? Are these my 8x8 blocks? Ask Austin
-                    // Where does the MAD data go?
-                    // How do I decide on N, or p?
-            
+            // data is YCbCr data
+            // how big are the macroblocks? Are these my 8x8 blocks? Ask Austin
+            // Where does the MAD data go?
+            // How do I decide on N, or p?
+            Pad padding = new Pad(ref dataObj, 1);
+            dataObj.yData = padding.padData(dataObj.yData, padding.padW, padding.padH, dataObj, 1);
+            dataObj.yData2 = padding.padData(dataObj.yData2, padding.padW, padding.padH, dataObj, 2);
+            MotionVector[] mvArray = new MotionVector[(dataObj.paddedWidth / 16) * (dataObj.paddedHeight / 16)];
 
-            MotionVector mv = new MotionVector();
+            int z = 0;
+            for(int x = 0; x < dataObj.paddedWidth; x+=16)
+            {
+                for(int y = 0; y < dataObj.paddedHeight; y+=16)
+                {
+                    // luma first
+                    mvArray[z++] = MotionCompesation.seqMVSearch(16, 16, dataObj.yData, dataObj.yData2, x, y, dataObj);
+                }
+            }
             
             // draw lines where the changes are
             using (var graphics = Graphics.FromImage(bmp))
             {
-                Pen blackPen = new Pen(Color.Black, 3);
+                Pen blackPen = new Pen(Color.Black, 1);
                 // just draw the motion vector(x,y)(x1,y1) coords
-                graphics.DrawLine(blackPen, mv.x1, mv.y1, mv.x2, mv.y2);
+                foreach(MotionVector vec in mvArray)
+                   graphics.DrawLine(blackPen, vec.x, vec.y, vec.u, vec.v);
             }
 
             // Set bitmap for picturebox3
             pictureBox3.Image = bmp;
         }
+
         /// <summary>
         /// Sets final data array with Y + Cb + Cr data (in order) after being RLE'ed
         /// </summary>
@@ -383,6 +404,7 @@ namespace Compression
                 dataObj.finalData[fd++] = dataObj.crEncoded[kk];
             }
         }
+
         /// <summary>
         /// Splits data from a single array to Y, Cb & Cr depending on the size
         /// specified in header.
@@ -409,6 +431,7 @@ namespace Compression
                 dataObj.crEncoded[kk] = dataObj.finalData[fd++];
             }
         }
+
         /// <summary>
         /// Shows the Y data in picturebox3
         /// </summary>
@@ -421,6 +444,7 @@ namespace Compression
         {
             pictureBox3.Image = dataObj.getYBitmap(dataObj.gHead);
         }
+
         /// <summary>
         /// Shows the Cr data in picturebox3
         /// </summary>
@@ -433,6 +457,7 @@ namespace Compression
         {
             pictureBox3.Image = dataObj.getCrBitmap(dataObj.gHead);
         }
+
         /// <summary>
         /// Shows the Cb data in picturebox3
         /// </summary>
@@ -445,6 +470,7 @@ namespace Compression
         {
             pictureBox3.Image = dataObj.getCbBitmap(dataObj.gHead);
         }
+
         /// <summary>
         /// Shows the YCbCr image in picturebox3
         /// </summary>
@@ -457,6 +483,7 @@ namespace Compression
         {
             pictureBox3.Image = dataObj.getYCbCrBitmap(dataObj.gHead);
         }
+
         /// <summary>
         /// Calculates motion vectors based on display 1 and 2
         /// </summary>
@@ -466,6 +493,7 @@ namespace Compression
         {
 
         }
+
         /// <summary>
         /// Saves the YCbCr RLE'ed data to the file name with the gHead in the
         /// data object.
@@ -490,6 +518,7 @@ namespace Compression
             wr.Close();
             fs.Close();
         }
+
         /// <summary>
         /// Opens the file.
         /// </summary>
@@ -583,6 +612,7 @@ namespace Compression
             dataChanger = new RGBChanger();
             pictureBox2.Image = dataObj.generateBitmap();
         }
+
         /// <summary>
         /// Opens the file into the picture box.
         /// </summary>
@@ -676,6 +706,7 @@ namespace Compression
             dataChanger = new RGBChanger();
             pb.Image = dataObj.generateBitmap();
         }
+
         /// <summary>
         /// Writes the header data to the file
         /// </summary>
@@ -694,6 +725,7 @@ namespace Compression
             file.Write(header.getCblen());
             file.Write(header.getCrlen());
         }
+
         /// <summary>
         /// Writes the final data to the file
         /// </summary>
@@ -714,6 +746,7 @@ namespace Compression
             for (int i = 0; i < header.getCrlen(); i++)
                 file.Write(data[c++]);
         }
+
         /// <summary>
         /// Reads the header data into the Data object.
         /// </summary>
@@ -732,6 +765,7 @@ namespace Compression
             header.setCblen(file.ReadInt32());
             header.setCrlen(file.ReadInt32());
         }
+
         /// <summary>
         /// Reads the rest of the data into the final data array to be split.
         /// </summary>
@@ -762,5 +796,6 @@ namespace Compression
                 data[c++] = file.ReadSByte();
             }
         }
+
     }
 }
