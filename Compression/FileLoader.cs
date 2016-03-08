@@ -499,6 +499,7 @@ namespace Compression
             // update the RGBChanger data to what we have in the dataObj
             setFinalData(); // GOOD
 
+                // ** SOMETHING WRONG HERE. NEED TO FIX THE SIZE OF THE ARRAYS ** //
             // Save the differences and the size of the array to gMHead
             // DCT, Quantize, ZigZag, RLE, output
             pos = 0;
