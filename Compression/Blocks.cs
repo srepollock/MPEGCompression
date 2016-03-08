@@ -39,6 +39,29 @@ namespace Compression
         }
 
         /// <summary>
+        /// Generates 2D block of double data.
+        /// </summary>
+        /// <remarks>
+        /// This will generate 2D blocks of double data.
+        /// </remarks>
+        /// <param name="data">Original data</param>
+        /// <param name="offsetx">X offset</param>
+        /// <param name="offsety">Y offset</param>
+        /// <returns>8x8 double data</returns>
+        public double[,] generate2DBlocks(double[,] data, int offsetx, int offsety)
+        {
+            double[,] output = new double[8, 8];
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    output[x, y] = data[offsetx + x, offsety + y];
+                }
+            }
+            return output;
+        }
+
+        /// <summary>
         /// Generates 1D block of sbyte data.
         /// </summary>
         /// <remarks>

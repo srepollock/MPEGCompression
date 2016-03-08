@@ -64,12 +64,13 @@ namespace Compression
         /// <param name="x">Origin of the macroblock</param>
         /// <param name="y">Origin of the macroblock</param>
         /// <param name="dataObj">Data object to get the width and height from</param>
+        /// <param name="minDiff">minDifference to save for use in the outside object.</param>
         /// <returns>MotionVector with the coords of the (x,y) origin and where to (u,v) difference is</returns>
-        public static MotionVector seqMVSearch(int N, int p, byte[,] C, byte[,]R, int x, int y, Data dataObj)
+        public static MotionVector seqMVSearch(int N, int p, byte[,] C, byte[,]R, int x, int y, Data dataObj, double minDiff)
         {
             int u = x, v = y; // Vector (x-u, y-v), set to origin point initially
             MotionVector mv;
-            double minDiff = MAD(N, p, C, R, x, y, x, y); // Init
+            minDiff = MAD(N, p, C, R, x, y, x, y); // Init
             for(int i = x-p; i < x+p; i++)
             {
                 if (i < 0 || i + N > dataObj.paddedWidth) continue;
@@ -100,19 +101,20 @@ namespace Compression
         /// This will sequentiall search the whole (2p + 1) * (2p + 1) window
         /// in the Reference frame.
         /// </remarks>
-        /// <param name="N">Size of the macroblock</param>
-        /// <param name="p">Size of the search area (2 * p + 1)</param>
-        /// <param name="C">Target (current) frame</param>
-        /// <param name="R">Reference frame</param>
-        /// <param name="x">Origin of the macroblock</param>
-        /// <param name="y">Origin of the macroblock</param>
-        /// <param name="dataObj">Data object to get the width and height from</param>
+        /// <param name="N">Size of the macroblock.</param>
+        /// <param name="p">Size of the search area (2 * p + 1).</param>
+        /// <param name="C">Target (current) frame.</param>
+        /// <param name="R">Reference frame.</param>
+        /// <param name="x">Origin of the macroblock.</param>
+        /// <param name="y">Origin of the macroblock.</param>
+        /// <param name="dataObj">Data object to get the width and height from.</param>
+        /// <param name="minDiff">minDifference to save for use in the outside object.</param>
         /// <returns>MotionVector with the coords of the (x,y) origin and where to (u,v) difference is</returns>
-        public static MotionVector chromaSeqMVSearch(int N, int p, byte[,] C, byte[,] R, int x, int y, Data dataObj)
+        public static MotionVector chromaSeqMVSearch(int N, int p, byte[,] C, byte[,] R, int x, int y, Data dataObj, double minDiff)
         {
             int u = x, v = y; // Vector (x-u, y-v), set to origin point initially
             MotionVector mv;
-            double minDiff = MAD(N, p, C, R, x, y, x, y); // Init
+            minDiff = MAD(N, p, C, R, x, y, x, y); // Init
             for (int i = x - p; i < x + p; i++)
             {
                 if (i < 0 || i + N > dataObj.paddedWidth / 2) continue;

@@ -41,9 +41,15 @@ namespace Compression
         public byte[,] yData;
         public byte[,] CbData;
         public byte[,] CrData;
+
         public byte[,] yData2;
         public byte[,] CbData2;
         public byte[,] CrData2;
+
+        public double[,] yDiff;
+        public double[,] cbDiff;
+        public double[,] crDiff;
+
         public double[,] dyData;
         public double[,] dCbData;
         public double[,] dCrData;
@@ -84,10 +90,13 @@ namespace Compression
         /// Public arrays for final data, YEncoding data, CbEncoding data,
         /// and CrEncoding data. as sbytes
         /// </summary>
-        public sbyte[] finalData;
+        public sbyte[] finalData, finalDiffData;
         public sbyte[] yEncoded,
                        cbEncoded,
-                       crEncoded;
+                       crEncoded,
+                       yDiffEncoded,
+                       cbDiffEncoded,
+                       crDiffEncoded;
 
         /// <summary>
         /// Public header for the file, both for reading and saving.
@@ -103,6 +112,11 @@ namespace Compression
         /// Header for the motion vector image 2
         /// </summary>
         public Header mv2Head = new Header();
+
+        /// <summary>
+        /// Public header for the motion vector compressed file.
+        /// </summary>
+        public MHeader gMHead = new MHeader();
 
         /// <summary>
         /// Gets Y Bitmap

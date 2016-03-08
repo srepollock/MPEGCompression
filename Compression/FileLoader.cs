@@ -328,17 +328,21 @@ namespace Compression
         }
 
         /// <summary>
-        /// 
+        /// Calculates the motion vectors of the image.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void calculateMotionVectorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            byte[,] tempY, tempCb, tempCr;
+            sbyte[,] stempY, stempCb, stempCr;
+            double[,] tempDY, tempDCb, tempDCr;
+            sbyte[] szztempY, szztempB, szztempR;
             // need to get YCbCr data of img 1 and 2
             // Image 1
-                // data saved into the Data.yData, cbData, crData
+            // data saved into the Data.yData, cbData, crData
             // Image 2
-                // data saved into the Data.yData2, cbData2, crData2
+            // data saved into the Data.yData2, cbData2, crData2
             dataChanger.RGBtoYCbCr((Bitmap)pictureBox1.Image, ref dataObj, 1);
             dataChanger.RGBtoYCbCr((Bitmap)pictureBox2.Image, ref dataObj, 2);
             // Create bitmap for picturebox 3
@@ -355,62 +359,213 @@ namespace Compression
             dataObj.yData = padding.padData(dataObj.yData, padding.padW, padding.padH, dataObj, 1);
             dataObj.yData2 = padding.padData(dataObj.yData2, padding.padW, padding.padH, dataObj, 2);
             MotionVector[] mvLArr = new MotionVector[(dataObj.paddedWidth / 8) * (dataObj.paddedHeight / 8)];
+            dataObj.yDiff = new double[(dataObj.paddedWidth / 8), (dataObj.paddedHeight / 8)];
             dataObj.CbData = padding.padData(dataObj.CbData, padding.padW, padding.padH, dataObj, 1);
             dataObj.CbData2 = padding.padData(dataObj.CbData2, padding.padW, padding.padH, dataObj, 2);
             MotionVector[] mvCbArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
+            dataObj.cbDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
             dataObj.CrData = padding.padData(dataObj.CrData, padding.padW, padding.padH, dataObj, 1);
             dataObj.CrData2 = padding.padData(dataObj.CrData2, padding.padW, padding.padH, dataObj, 2);
             MotionVector[] mvCrArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
+            dataObj.crDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
+
             dataObj.CbData = Sampler.subsample(dataObj.CbData, ref dataObj);
             dataObj.CbData2 = Sampler.subsample(dataObj.CbData2, ref dataObj);
             dataObj.CrData = Sampler.subsample(dataObj.CrData, ref dataObj);
             dataObj.CrData2 = Sampler.subsample(dataObj.CrData2, ref dataObj);
 
+
+
+            dataObj.yDiffEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
+            dataObj.cbDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
+            dataObj.crDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
+
+            dataObj.yDiff = new double[(dataObj.paddedWidth / 8), (dataObj.paddedHeight / 8)];
+
             int z = 0;
+            int xx = 0, yy = 0;
+            double minDiff = 0, minDiff2 = 0;
             for(int x = 0; x < dataObj.paddedWidth; x+=8)
             {
                 for(int y = 0; y < dataObj.paddedHeight; y+=8)
                 {
+                    minDiff = 0;
                     // luma first
-                    mvLArr[z++] = MotionCompesation.seqMVSearch(8, 8, dataObj.yData, dataObj.yData2, x, y, dataObj);
+                    mvLArr[z++] = MotionCompesation.seqMVSearch(8, 8, dataObj.yData, dataObj.yData2, x, y, dataObj, minDiff);
+                    dataObj.yDiff[xx, yy++] = minDiff;
                 }
+                xx++; yy = 0;
             }
             z = 0;
+            xx = 0;
+            yy = 0;
+            minDiff = 0;
             for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
             {
                 for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
                 {
-                    mvCbArr[z] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CbData, dataObj.CbData2, x, y, dataObj);
-                    mvCrArr[z++] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CrData, dataObj.CrData2, x, y, dataObj);
+                    minDiff = 0;
+                    minDiff2 = 0;
+                    mvCbArr[z] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CbData, dataObj.CbData2, x, y, dataObj, minDiff);
+                    mvCrArr[z++] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CrData, dataObj.CrData2, x, y, dataObj, minDiff2);
+                    dataObj.cbDiff[xx, yy] = minDiff;
+                    dataObj.crDiff[xx, yy++] = minDiff2;
                 }
+                xx++; yy = 0;
             }
 
             // draw lines where the changes are
             using (var graphics = Graphics.FromImage(bmp))
             {
-                Pen blackPen = new Pen(Color.Black, 1);
-                // just draw the motion vector(x,y)(x1,y1) coords
-                foreach(MotionVector vec in mvLArr)
-                   graphics.DrawLine(blackPen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
-            }
-            /*
-            // draw lines where the changes are
-            using (var graphics = Graphics.FromImage(bmp))
-            {
-                Pen bluePen = new Pen(Color.Blue, 1);
-                // just draw the motion vector(x,y)(x1,y1) coords
-                foreach (MotionVector vec in mvCbArr)
-                    graphics.DrawLine(bluePen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
-            }
-            // draw lines where the changes are
-            using (var graphics = Graphics.FromImage(bmp))
-            {
                 Pen redPen = new Pen(Color.Red, 1);
                 // just draw the motion vector(x,y)(x1,y1) coords
-                foreach (MotionVector vec in mvCrArr)
-                    graphics.DrawLine(redPen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
+                foreach (MotionVector vec in mvLArr)
+                   graphics.DrawLine(redPen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
             }
-            */
+
+            // I Frame
+                // DCT, Quantize, ZigZag, RLE, output
+            // Difference Frame
+                // DCT, Quantize, ZigZag, RLE, output
+            // Save with MHeader
+
+            // Save the original size
+            dataObj.gMHead.setHeight((short)pictureBox1.Image.Height);
+            dataObj.gMHead.setWidth((short)pictureBox1.Image.Width);
+
+            // I-Frame setup saving
+            int pos = 0, sz = 0;
+            for (int y = 0; y < dataObj.paddedHeight; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth; x += 8)
+                {
+                    sz += 64;
+                    // (add 128 before)DCT, Quantize, ZigZag and RLE
+                    // Y
+                    tempY = block.generate2DBlocks(dataObj.getyData(), x, y);
+                    tempDY = dctObj.forwardDCT(tempY);
+                    // quantize
+                    stempY = q.quantizeLuma(tempDY);
+                    // zigzag
+                    szztempY = zz.zigzag(stempY);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+                    Array.Resize<sbyte>(ref dataObj.yEncoded, sz);
+                    Buffer.BlockCopy(szztempY, 0, dataObj.yEncoded, pos, 64);
+                    pos += 64;
+                }
+            }
+            pos = 0;
+            sz = 0;
+            for (int j = 0; j < dataObj.paddedHeight / 2; j += 8)
+            {
+                for (int i = 0; i < dataObj.paddedWidth / 2; i += 8)
+                {
+                    sz += 64;
+                    // Cb (data is subsampled)
+                    tempCb = block.generate2DBlocks(dataObj.getCbData(), i, j);
+                    tempDCb = dctObj.forwardDCT(tempCb);
+                    // quantize
+                    stempCb = q.quantizeData(tempDCb);
+                    // zigzag
+                    szztempB = zz.zigzag(stempCb);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+                    Array.Resize<sbyte>(ref dataObj.cbEncoded, sz);
+                    Buffer.BlockCopy(szztempB, 0, dataObj.cbEncoded, pos, 64);
+
+                    // Cr (data is subsampled)
+                    tempCr = block.generate2DBlocks(dataObj.getCrData(), i, j);
+                    tempDCr = dctObj.forwardDCT(tempCr);
+                    // quantize
+                    stempCr = q.quantizeData(tempDCr);
+                    // zigzag
+                    szztempR = zz.zigzag(stempCr);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+                    Array.Resize<sbyte>(ref dataObj.crEncoded, sz);
+                    Buffer.BlockCopy(szztempR, 0, dataObj.crEncoded, pos, 64);
+                    pos += 64;
+                }
+            }
+            // rle the data
+            dataObj.yEncoded = RLE.rle(dataObj.yEncoded);
+            dataObj.cbEncoded = RLE.rle(dataObj.cbEncoded);
+            dataObj.crEncoded = RLE.rle(dataObj.crEncoded);
+            // set the header information
+            dataObj.gMHead.setYlen(dataObj.yEncoded.Length);
+            dataObj.gMHead.setCblen(dataObj.cbEncoded.Length);
+            dataObj.gMHead.setCrlen(dataObj.crEncoded.Length);
+            // update the RGBChanger data to what we have in the dataObj
+            setFinalData(); // GOOD
+
+            // Save the differences and the size of the array to gMHead
+            // DCT, Quantize, ZigZag, RLE, output
+            pos = 0;
+            sz = 0;
+            for (int y = 0; y < dataObj.paddedHeight / 8; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth / 8; x += 8)
+                {
+                    sz += 64;
+                    // (add 128 before)DCT, Quantize, ZigZag and RLE
+                    // Y
+                    tempDY = block.generate2DBlocks(dataObj.yDiff, x, y);
+                    tempDY = dctObj.forwardDCT(tempDY);
+                    // quantize
+                    stempY = q.quantizeLuma(tempDY);
+                    // zigzag
+                    szztempY = zz.zigzag(stempY);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+                    Array.Resize<sbyte>(ref dataObj.yDiffEncoded, sz);
+                    Buffer.BlockCopy(szztempY, 0, dataObj.yDiffEncoded, pos, 64);
+                    pos += 64;
+                }
+            }
+            pos = 0;
+            sz = 0;
+            for (int j = 0; j < dataObj.paddedHeight / 32; j ++)
+            {
+                for (int i = 0; i < dataObj.paddedWidth / 32; i ++)
+                {
+                    sz += 64;
+                    // Cb (data is subsampled)
+                    tempDCb = block.generate2DBlocks(dataObj.cbDiff, i, j);
+                    tempDCb = dctObj.forwardDCT(tempDCb);
+                    // quantize
+                    stempCb = q.quantizeData(tempDCb);
+                    // zigzag
+                    szztempB = zz.zigzag(stempCb);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+                    Array.Resize<sbyte>(ref dataObj.cbDiffEncoded, sz);
+                    Buffer.BlockCopy(szztempB, 0, dataObj.cbDiffEncoded, pos, 64);
+
+                    // Cr (data is subsampled)
+                    tempDCr = block.generate2DBlocks(dataObj.crDiff, i, j);
+                    tempDCr = dctObj.forwardDCT(tempDCr);
+                    // quantize
+                    stempCr = q.quantizeData(tempDCr);
+                    // zigzag
+                    szztempR = zz.zigzag(stempCr);
+
+                    // put the data into the final array here with an offset of i+=64 for each array
+                    Array.Resize<sbyte>(ref dataObj.crDiffEncoded, sz);
+                    Buffer.BlockCopy(szztempR, 0, dataObj.crDiffEncoded, pos, 64);
+                    pos += 64;
+                }
+            }
+            setFinalDiffData();
+
+            dataObj.gMHead.setDiffYlen(dataObj.yDiff.Length);
+            dataObj.gMHead.setDiffCblen(dataObj.cbDiff.Length);
+            dataObj.gMHead.setDiffCrlen(dataObj.crDiff.Length);
+
+
+            // Save the motion vectors and the size of the array to gMHea
+
+
 
             // Set bitmap for picturebox3
             pictureBox3.Image = bmp;
@@ -440,6 +595,33 @@ namespace Compression
             for (int kk = 0; kk < dataObj.crEncoded.Length; kk++)
             {
                 dataObj.finalData[fd++] = dataObj.crEncoded[kk];
+            }
+        }
+
+        /// <summary>
+        /// Sets final data array with Ydiff + Cbdiff + Crdiff data (in order) after being RLE'ed
+        /// </summary>
+        /// <remarks>
+        /// This function sets the final data to be outputted to a file into
+        /// a single array. This will make it easier to save the data by
+        /// only calling on one array, instead of 3 each of different
+        /// sizes.
+        /// </remarks>
+        private void setFinalDiffData()
+        {
+            int fd = 0;
+            dataObj.finalDiffData = new sbyte[dataObj.yDiffEncoded.Length + dataObj.cbDiffEncoded.Length + dataObj.crDiffEncoded.Length];
+            for (int i = 0; i < dataObj.yDiffEncoded.Length; i++)
+            {
+                dataObj.finalDiffData[fd++] = dataObj.yDiffEncoded[i];
+            }
+            for (int jj = 0; jj < dataObj.cbDiffEncoded.Length; jj++)
+            {
+                dataObj.finalDiffData[fd++] = dataObj.cbDiffEncoded[jj];
+            }
+            for (int kk = 0; kk < dataObj.crDiffEncoded.Length; kk++)
+            {
+                dataObj.finalDiffData[fd++] = dataObj.crDiffEncoded[kk];
             }
         }
 
@@ -834,6 +1016,5 @@ namespace Compression
                 data[c++] = file.ReadSByte();
             }
         }
-
     }
 }

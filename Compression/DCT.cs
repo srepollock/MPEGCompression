@@ -81,6 +81,40 @@ namespace Compression
         }
 
         /// <summary>
+        /// DCT's the data forward.
+        /// </summary>
+        /// <remarks>
+        /// This will show the changes in the images data. This will only
+        /// ever work with blocks of 8x8, so it can be hardcoded to the sum
+        /// of E8 E8.
+        /// </remarks>
+        /// <param name="imgData">Image data as an 8x8 block</param>
+        /// <returns>Double array of doubles</returns>
+        public double[,] forwardDCT(double[,] imgData)
+        {
+            double[,] forwardData = new double[8, 8];
+            double temp = 0;
+            for (int v = 0; v < 8; v++)
+            {
+                for (int u = 0; u < 8; u++)
+                {
+                    temp = 0;
+                    for (int j = 0; j < 8; j++)
+                    {
+                        for (int i = 0; i < 8; i++)
+                        {
+                            temp += Math.Cos(((2 * j + 1) * v * Math.PI) / 16)
+                                * Math.Cos(((2 * i + 1) * u * Math.PI) / 16)
+                                * imgData[j, i];
+                        }
+                    }
+                    forwardData[v, u] = temp * ((C(v) * C(u)) / 4);
+                }
+            }
+            return forwardData;
+        }
+
+        /// <summary>
         /// Reverses DCT'ed data and returns bytes.
         /// </summary>
         /// <remarks>
