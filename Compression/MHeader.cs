@@ -27,7 +27,10 @@ namespace Compression
             crlen,
             diffYlen,
             diffCblen,
-            diffCrlen;
+            diffCrlen,
+            MVYlen,
+            MVCblen,
+            MVCrlen;
 
         /// <summary>
         /// Qulity can be set by multiplying this number into the chroma table
@@ -55,6 +58,9 @@ namespace Compression
         public int getDiffYlen() { return this.diffYlen; }
         public int getDiffCblen() { return this.diffCblen; }
         public int getDiffCrlen() { return this.diffCrlen; }
+        public int getMVYlen() { return this.MVYlen; }
+        public int getMVCblen() { return this.MVCblen; }
+        public int getMVCrlen() { return this.MVCrlen; }
         public byte getQuality() { return this.quality; }
 
         /// <summary>
@@ -68,6 +74,9 @@ namespace Compression
         public void setDiffYlen(int y) { this.diffYlen = y; }
         public void setDiffCblen(int cb) { this.diffCblen = cb; }
         public void setDiffCrlen(int cr) { this.diffCrlen = cr; }
+        public void setMVYlen(int y) { this.MVYlen = y; }
+        public void setMVCblen(int cb) { this.MVCblen = cb; }
+        public void setMVCrlen(int cr) { this.MVCrlen = cr; }
         public void setQuality(byte q) { this.quality = q; }
     }
 }

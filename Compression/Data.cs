@@ -102,6 +102,11 @@ namespace Compression
                        cbDiffEncoded,
                        crDiffEncoded;
 
+        public MotionVector[] finalMVData,
+                              yMVEncoded,
+                              cbMVEncoded,
+                              crMVEncoded;
+
         /// <summary>
         /// Public header for the file, both for reading and saving.
         /// </summary>

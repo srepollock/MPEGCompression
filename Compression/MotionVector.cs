@@ -9,7 +9,7 @@ namespace Compression
     /// <summary>
     /// MotionVector, holds the (x,y) of the origin, (u,v) of the change
     /// </summary>
-    class MotionVector
+    public class MotionVector
     {
         /// <summary>
         /// x of the origin

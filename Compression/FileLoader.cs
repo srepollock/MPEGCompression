@@ -66,7 +66,7 @@ namespace Compression
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "BMP Files|*.bmp|JPG Files|*.jpg|PNG Files|*.png|RIPPEG Files|*.rippeg|All Files|*.*";
+            openFileDialog.Filter = "BMP Files|*.bmp|JPG Files|*.jpg|PNG Files|*.png|RIPPEG Files|*.rippeg|MotionRIPPEG Files|*.mrippeg|All Files|*.*";
             DialogResult result = openFileDialog.ShowDialog(); // I want to open this to the child window in the file
             if (result == DialogResult.OK) // checks if the result returned true
             {
@@ -74,7 +74,12 @@ namespace Compression
                 if(ext == ".rippeg")
                 {
                     pictureBox2.Image = null;
-                    openFile(openFileDialog.FileName);
+                    openFileRPPG(openFileDialog.FileName);
+                }
+                if(ext == ".mrippeg")
+                {
+                    pictureBox2.Image = null;
+                    openFileMRPPG(openFileDialog.FileName);
                 }
                 else
                 {
@@ -109,7 +114,15 @@ namespace Compression
             DialogResult result = saveFileDialog.ShowDialog();
             if(result == DialogResult.OK)
             {
-                this.saveFile(saveFileDialog.FileName);
+                string ext = Path.GetExtension(saveFileDialog.FileName); // includes the period
+                if (ext == ".rippeg")
+                {
+                    this.saveFileRPPG(saveFileDialog.FileName);
+                }
+                else if (ext == ".mrippeg")
+                {
+                    this.saveFileMRPPG(saveFileDialog.FileName);
+                }
             }
         }
 
@@ -282,7 +295,7 @@ namespace Compression
                 string ext = Path.GetExtension(openFileDialog.FileName); // includes the period
                 if (ext == ".rippeg")
                 {
-                    openFile(openFileDialog.FileName, pictureBox1);
+                    openFileRPPG(openFileDialog.FileName, pictureBox1);
                     dataObj.mv1Head.setHeight((short)pictureBox1.Image.Height);
                     dataObj.mv1Head.setWidth((short)pictureBox1.Image.Width);
                 }
@@ -312,7 +325,7 @@ namespace Compression
                 string ext = Path.GetExtension(openFileDialog.FileName); // includes the period
                 if (ext == ".rippeg")
                 {
-                    openFile(openFileDialog.FileName, pictureBox2);
+                    openFileRPPG(openFileDialog.FileName, pictureBox2);
                     dataObj.mv2Head.setHeight((short)pictureBox2.Image.Height);
                     dataObj.mv2Head.setWidth((short)pictureBox2.Image.Width);
                 }
@@ -601,6 +614,7 @@ namespace Compression
             // Save the motion vectors and the size of the array to gMHea
 
 
+
             //* TESTING *//
 
             byte[,] PLtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
@@ -664,6 +678,11 @@ namespace Compression
 
             //* TESTING *//
 
+            // Save the motion vector data
+
+            setFinalMVData();
+
+            saveToolStripMenuItem.Enabled = true;
 
             // Set bitmap for picturebox3
             pictureBox3.Image = test;
@@ -696,19 +715,30 @@ namespace Compression
             }
         }
 
-        /// <summary>
-        /// Sets final data array with Ydiff + Cbdiff + Crdiff data (in order) after being RLE'ed
-        /// </summary>
-        /// <remarks>
-        /// This function sets the final data to be outputted to a file into
-        /// a single array. This will make it easier to save the data by
-        /// only calling on one array, instead of 3 each of different
-        /// sizes.
-        /// </remarks>
+        
         private void setFinalDiffData()
         {
             int fd = 0;
             dataObj.finalDiffData = new sbyte[dataObj.yDiffEncoded.Length + dataObj.cbDiffEncoded.Length + dataObj.crDiffEncoded.Length];
+            for (int i = 0; i < dataObj.yDiffEncoded.Length; i++)
+            {
+                dataObj.finalDiffData[fd++] = dataObj.yDiffEncoded[i];
+            }
+            for (int jj = 0; jj < dataObj.cbDiffEncoded.Length; jj++)
+            {
+                dataObj.finalDiffData[fd++] = dataObj.cbDiffEncoded[jj];
+            }
+            for (int kk = 0; kk < dataObj.crDiffEncoded.Length; kk++)
+            {
+                dataObj.finalDiffData[fd++] = dataObj.crDiffEncoded[kk];
+            }
+        }
+
+        
+        private void setFinalMVData()
+        {
+            int fd = 0;
+            dataObj.finalMVData = new MotionVector[dataObj.yMVEncoded.Length + dataObj.cbMVEncoded.Length + dataObj.crMVEncoded.Length];
             for (int i = 0; i < dataObj.yDiffEncoded.Length; i++)
             {
                 dataObj.finalDiffData[fd++] = dataObj.yDiffEncoded[i];
@@ -747,6 +777,44 @@ namespace Compression
             for (int kk = 0; kk < dataObj.crEncoded.Length; kk++)
             {
                 dataObj.crEncoded[kk] = dataObj.finalData[fd++];
+            }
+        }
+
+        
+        private void splitFinalDiffData()
+        {
+            int fd = 0;
+
+            for (int i = 0; i < dataObj.yDiffEncoded.Length; i++)
+            {
+                dataObj.yDiffEncoded[i] = dataObj.finalDiffData[fd++];
+            }
+            for (int jj = 0; jj < dataObj.cbDiffEncoded.Length; jj++)
+            {
+                dataObj.cbDiffEncoded[jj] = dataObj.finalDiffData[fd++];
+            }
+            for (int kk = 0; kk < dataObj.crDiffEncoded.Length; kk++)
+            {
+                dataObj.crDiffEncoded[kk] = dataObj.finalDiffData[fd++];
+            }
+        }
+
+
+        private void splitFinalMVData()
+        {
+            int fd = 0;
+
+            for (int i = 0; i < dataObj.yMVEncoded.Length; i++)
+            {
+                dataObj.yMVEncoded[i] = dataObj.finalMVData[fd++];
+            }
+            for (int jj = 0; jj < dataObj.cbMVEncoded.Length; jj++)
+            {
+                dataObj.cbMVEncoded[jj] = dataObj.finalMVData[fd++];
+            }
+            for (int kk = 0; kk < dataObj.crMVEncoded.Length; kk++)
+            {
+                dataObj.crMVEncoded[kk] = dataObj.finalMVData[fd++];
             }
         }
 
@@ -823,7 +891,7 @@ namespace Compression
         /// using RLE.
         /// </remarks>
         /// <param name="fileName">File name to the data to</param>
-        public void saveFile(string fileName)
+        public void saveFileRPPG(string fileName)
         {
             if (pictureBox2.Image == null) return;
             this.Text = fileName; // sets the text of the form to the file name
@@ -832,6 +900,20 @@ namespace Compression
             // setup the header information
                 // height, width, ylen, cblen, crlen, quality
             writeData(wr, dataObj.gHead);
+            writeData(wr, dataObj.gHead, dataObj.finalData);
+            wr.Close();
+            fs.Close();
+        }
+
+        public void saveFileMRPPG(string fileName)
+        {
+            if (pictureBox3.Image == null) return;
+            this.Text = fileName;
+            FileStream fs = new FileStream(fileName, FileMode.Create);
+            BinaryWriter wr = new BinaryWriter(fs);
+            // setup the header information
+            // height, width, ylen, cblen, crlen, quality
+            writeData(wr, dataObj.gMHead);
             writeData(wr, dataObj.gHead, dataObj.finalData);
             wr.Close();
             fs.Close();
@@ -846,7 +928,7 @@ namespace Compression
         /// Defaults to pictureBox2
         /// </remarks>
         /// <param name="fileName">File name to load data from</param>
-        public void openFile(string fileName)
+        public void openFileRPPG(string fileName)
         {
             this.Text = fileName; // sets the text of the form to the file name
             BinaryReader re = new BinaryReader(File.OpenRead(fileName));
@@ -940,7 +1022,7 @@ namespace Compression
         /// Saves it to the specified picture box.
         /// </remarks>
         /// <param name="fileName">File name to load data from</param>
-        public void openFile(string fileName, PictureBox pb)
+        public void openFileRPPG(string fileName, PictureBox pb)
         {
             this.Text = fileName; // sets the text of the form to the file name
             BinaryReader re = new BinaryReader(File.OpenRead(fileName));
@@ -1025,6 +1107,11 @@ namespace Compression
             pb.Image = dataObj.generateBitmap(dataObj.gHead);
         }
 
+
+        public void openFileMRPPG(string fileName) {
+
+        }
+
         /// <summary>
         /// Writes the header data to the file
         /// </summary>
@@ -1042,6 +1129,19 @@ namespace Compression
             file.Write(header.getYlen());
             file.Write(header.getCblen());
             file.Write(header.getCrlen());
+        }
+
+        private void writeData(BinaryWriter file, MHeader header)
+        {
+            file.Write(header.getHeight());
+            file.Write(header.getWidth());
+            file.Write(header.getQuality());
+            file.Write(header.getYlen());
+            file.Write(header.getCblen());
+            file.Write(header.getCrlen());
+            file.Write(header.getDiffYlen());
+            file.Write(header.getDiffCblen());
+            file.Write(header.getDiffCrlen());
         }
 
         /// <summary>
@@ -1063,6 +1163,31 @@ namespace Compression
                 file.Write(data[c++]);
             for (int i = 0; i < header.getCrlen(); i++)
                 file.Write(data[c++]);
+        }
+
+        private void writeData(BinaryWriter file, MHeader header, sbyte[] data, sbyte[] diffdata, sbyte[] mvData)
+        {
+            int c = 0; // I frame
+            for (int i = 0; i < header.getYlen(); i++)
+                file.Write(data[c++]);
+            for (int i = 0; i < header.getCblen(); i++)
+                file.Write(data[c++]);
+            for (int i = 0; i < header.getCrlen(); i++)
+                file.Write(data[c++]);
+            c = 0; // Diff data
+            for (int i = 0; i < header.getDiffYlen(); i++)
+                file.Write(diffdata[c++]);
+            for (int i = 0; i < header.getDiffCblen(); i++)
+                file.Write(diffdata[c++]);
+            for (int i = 0; i < header.getDiffCrlen(); i++)
+                file.Write(diffdata[c++]);
+            c = 0; // MotionVectors
+            for (int i = 0; i < header.getMVYlen(); i++)
+                file.Write(mvData[c++]);
+            for (int i = 0; i < header.getMVCblen(); i++)
+                file.Write(mvData[c++]);
+            for (int i = 0; i < header.getMVCrlen(); i++)
+                file.Write(mvData[c++]);
         }
 
         /// <summary>
