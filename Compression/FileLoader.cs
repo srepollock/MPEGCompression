@@ -746,7 +746,9 @@ namespace Compression
             }
         }
 
-        
+        /// <summary>
+        /// Sets the final diff data to a single array from 3.
+        /// </summary>
         private void setFinalDiffData()
         {
             int fd = 0;
@@ -813,7 +815,9 @@ namespace Compression
             }
         }
 
-        
+        /// <summary>
+        /// Splits final diff data into 3 arrays.
+        /// </summary>
         private void splitFinalDiffData()
         {
             int fd = 0;
@@ -832,7 +836,9 @@ namespace Compression
             }
         }
 
-
+        /// <summary>
+        /// Splits final MV data into 3 arrray.
+        /// </summary>
         private void splitFinalMVData()
         {
             int fd = 0;
@@ -923,7 +929,7 @@ namespace Compression
         /// so that we can have a better compression when saving the data and
         /// using RLE.
         /// </remarks>
-        /// <param name="fileName">File name to the data to</param>
+        /// <param name="fileName">File name to the data to.</param>
         public void saveFileRPPG(string fileName)
         {
             if (pictureBox2.Image == null) return;
@@ -938,6 +944,11 @@ namespace Compression
             fs.Close();
         }
 
+        /// <summary>
+        /// Saves the YCbCr RLE'ed data to the file name with the gMHead in 
+        /// the data object.
+        /// </summary>
+        /// <param name="fileName">File name to load the data to.</param>
         public void saveFileMRPPG(string fileName)
         {
             if (pictureBox3.Image == null) return;
@@ -1140,7 +1151,16 @@ namespace Compression
             pb.Image = dataObj.generateBitmap(dataObj.gHead);
         }
 
-        
+        /// <summary>
+        /// Opens the file into the picture box.
+        /// </summary>
+        /// <remarks>
+        /// This opens the file of the specified name. This will only be
+        /// called on files that end with *.rippeg. (Why? Because it's funny)
+        /// Saves it to the specified picture box.
+        /// </remarks>
+        /// <param name="fileName">File name to load data from</param>
+        /// <param name="pb">Picture box to load the image into.</param>
         public void openFileMRPPG(string fileName, PictureBox pb) {
 
             this.Text = fileName; // sets the text of the form to the file name

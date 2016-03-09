@@ -53,7 +53,11 @@ namespace Compression
             }
         }
 
-
+        /// <summary>
+        /// Takes in the data object, and pads the data based on the MHeader.
+        /// </summary>
+        /// <param name="dataObj"></param>
+        /// <param name="header"></param>
         public Pad(ref Data dataObj, MHeader header)
         {
             modH = header.getHeight() % 16;
