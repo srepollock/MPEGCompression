@@ -200,6 +200,51 @@ namespace Compression
         }
 
         /// <summary>
+        /// Changes YCbCr data back into RGB data and saves it to the Data
+        /// object.
+        /// </summary>
+        /// <remarks>
+        /// YCbCr -> RGB
+        /// Changes the data in the data object to RGB data. Then saves the
+        /// data back to the Data object.
+        /// </remarks>
+        /// <param name="dataObj">Data object to read and save the data from/to</param>
+        public void YCbCrtoRGB(ref Data dataObj, MHeader head)
+        {
+
+            int width = head.getWidth();
+            int height = head.getHeight();
+            byte[,] rData = new byte[width, height];
+            byte[,] gData = new byte[width, height];
+            byte[,] bData = new byte[width, height];
+
+            // Can't use the height and width of original. Needs to be the sub sampled size
+            // need to handle doubling up the information
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int r, g, b;
+
+                    r = (int)(dataObj.yData[x, y] + (1.402 * ((dataObj.CrData[x, y] - 128))));
+                    g = (int)(dataObj.yData[x, y] - (0.34414 * (dataObj.CbData[x, y] - 128)) - (0.71414 * (dataObj.CrData[x, y] - 128)));
+                    b = (int)(dataObj.yData[x, y] + (1.772 * (dataObj.CbData[x, y] - 128)));
+
+                    r = Math.Max(0, Math.Min(255, r));
+                    g = Math.Max(0, Math.Min(255, g));
+                    b = Math.Max(0, Math.Min(255, b));
+
+                    rData[x, y] = (byte)r;
+                    gData[x, y] = (byte)g;
+                    bData[x, y] = (byte)b;
+                }
+            }
+            dataObj.setrData(rData);
+            dataObj.setgData(gData);
+            dataObj.setbData(bData);
+        }
+
+        /// <summary>
         /// Changes YCbCr data back into RGB data and saves into the Data 
         /// object.
         /// </summary>
@@ -217,6 +262,54 @@ namespace Compression
         {
             int width = dataObj.gHead.getWidth();
             int height = dataObj.gHead.getHeight();
+            byte[,] rData = new byte[width, height];
+            byte[,] gData = new byte[width, height];
+            byte[,] bData = new byte[width, height];
+
+            Bitmap outBmp = new Bitmap(width, height);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int r, g, b;
+
+                    r = (int)(dataObj.getdyData()[x, y] + (1.402 * ((dataObj.getdCrData()[x, y] - 128))));
+                    g = (int)(dataObj.getdyData()[x, y] - (0.34414 * (dataObj.getdCbData()[x, y] - 128)) - (0.71414 * (dataObj.getdCrData()[x, y] - 128)));
+                    b = (int)(dataObj.getdyData()[x, y] + (1.772 * (dataObj.getdCbData()[x, y] - 128)));
+
+                    r = Math.Max(0, Math.Min(255, r));
+                    g = Math.Max(0, Math.Min(255, g));
+                    b = Math.Max(0, Math.Min(255, b));
+
+                    rData[x, y] = (byte)r;
+                    gData[x, y] = (byte)g;
+                    bData[x, y] = (byte)b;
+                }
+            }
+            dataObj.setrData(rData);
+            dataObj.setgData(gData);
+            dataObj.setbData(bData);
+        }
+
+        /// <summary>
+        /// Changes YCbCr data back into RGB data and saves into the Data 
+        /// object.
+        /// </summary>
+        /// <remarks>
+        /// sYCbCr -> RGB
+        /// Changes the data in the data object to RGB data. Then saves the
+        /// data back to the Data object.
+        /// This is for sbytes
+        /// 
+        /// * Don't know if I really need this function. Is it not the exact
+        /// same as above?
+        /// </remarks>
+        /// <param name="dataObj">Data object to read and save the data from/to</param>
+        public void sYCbCrtoRGB(ref Data dataObj, MHeader head)
+        {
+            int width = head.getWidth();
+            int height = head.getHeight();
             byte[,] rData = new byte[width, height];
             byte[,] gData = new byte[width, height];
             byte[,] bData = new byte[width, height];

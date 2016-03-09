@@ -53,6 +53,27 @@ namespace Compression
             }
         }
 
+
+        public Pad(ref Data dataObj, MHeader header)
+        {
+            modH = header.getHeight() % 16;
+            modW = header.getWidth() % 16; // array is 1 # less for each
+            padW = 0;
+            padH = 0;
+            if (modW != 0 || modH != 0)
+            {
+                padW = (16 - modW == 16) ? 0 : 16 - modW;
+                padH = (16 - modH == 16) ? 0 : 16 - modH;
+                dataObj.paddedWidth = header.getWidth() + padW;
+                dataObj.paddedHeight = header.getHeight() + padH;
+            }
+            else
+            {
+                dataObj.paddedWidth = header.getWidth();
+                dataObj.paddedHeight = header.getHeight();
+            }
+        }
+
         /// <summary>
         /// Constructor to create the padding informmation from based on the picture number
         /// </summary>

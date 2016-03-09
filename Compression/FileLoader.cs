@@ -76,10 +76,10 @@ namespace Compression
                     pictureBox2.Image = null;
                     openFileRPPG(openFileDialog.FileName);
                 }
-                if(ext == ".mrippeg")
+                else if(ext == ".mrippeg")
                 {
                     pictureBox2.Image = null;
-                    openFileMRPPG(openFileDialog.FileName);
+                    openFileMRPPG(openFileDialog.FileName, pictureBox1);
                 }
                 else
                 {
@@ -110,7 +110,7 @@ namespace Compression
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "RIPPEG Files|*.rippeg|All Files|*.*";
+            saveFileDialog.Filter = "RIPPEG Files|*.rippeg|MotionRIPPEG Files|*.mrippeg|All Files|*.*";
             DialogResult result = saveFileDialog.ShowDialog();
             if(result == DialogResult.OK)
             {
@@ -341,6 +341,24 @@ namespace Compression
         }
 
         /// <summary>
+        /// Loads default Nomad1.jpg and Nomad2.jpg images into pb1 and pb2 
+        /// for testing.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void loadNomadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            pictureBox1.Image = Image.FromFile("C:\\Users\\Spencer\\Documents\\Visual Studio 2015\\Projects\\mpeg-compression\\Compression\\nomad1.jpg");
+            pictureBox2.Image = Image.FromFile("C:\\Users\\Spencer\\Documents\\Visual Studio 2015\\Projects\\mpeg-compression\\Compression\\nomad2.jpg");
+            dataObj.setOriginal((Bitmap)pictureBox1.Image);
+            dataObj.mv1Head.setHeight((short)pictureBox1.Image.Height);
+            dataObj.mv1Head.setWidth((short)pictureBox1.Image.Width);
+            dataObj.mv2Head.setHeight((short)pictureBox2.Image.Height);
+            dataObj.mv2Head.setWidth((short)pictureBox2.Image.Width);
+            calculateMotionVectorsToolStripMenuItem.Enabled = true;
+        }
+
+        /// <summary>
         /// Calculates the motion vectors of the image.
         /// </summary>
         /// <param name="sender"></param>
@@ -394,8 +412,6 @@ namespace Compression
             dataObj.yDiffEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.cbDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
             dataObj.crDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
-
-            dataObj.yDiff = new double[(dataObj.paddedWidth / 8), (dataObj.paddedHeight / 8)];
 
             double[,] outBlock = new double[8, 8];
 
@@ -595,7 +611,7 @@ namespace Compression
                     Buffer.BlockCopy(szztempR, 0, dataObj.crDiffEncoded, pos, 64);
 
                     // unzigzag
-                    stempCr = zz.unzigzag(szztempB);
+                    stempCr = zz.unzigzag(szztempR);
                     // inverse quantize
                     tempDCr = q.inverseQuantizeData(stempCr);
                     tempDCr = dctObj.dinverseDCT(tempDCr);
@@ -604,11 +620,15 @@ namespace Compression
                     pos += 64;
                 }
             }
+            dataObj.yDiffEncoded = RLE.rle(dataObj.yDiffEncoded);
+            dataObj.cbDiffEncoded = RLE.rle(dataObj.cbDiffEncoded);
+            dataObj.crDiffEncoded = RLE.rle(dataObj.crDiffEncoded);
+
             setFinalDiffData(); // GOOD
 
-            dataObj.gMHead.setDiffYlen(dataObj.yDiffBlock.Length);
-            dataObj.gMHead.setDiffCblen(dataObj.cbDiffBlock.Length);
-            dataObj.gMHead.setDiffCrlen(dataObj.crDiffBlock.Length);
+            dataObj.gMHead.setDiffYlen(dataObj.yDiffEncoded.Length);
+            dataObj.gMHead.setDiffCblen(dataObj.cbDiffEncoded.Length);
+            dataObj.gMHead.setDiffCrlen(dataObj.crDiffEncoded.Length);
 
 
             // Save the motion vectors and the size of the array to gMHea
@@ -680,6 +700,17 @@ namespace Compression
 
             // Save the motion vector data
 
+            // Not really encoded
+                // SAVED AS INTS!!!
+
+            dataObj.yMVEncoded = mvLArr;
+            dataObj.cbMVEncoded = mvCbArr;
+            dataObj.crMVEncoded = mvCrArr;
+
+            dataObj.gMHead.setMVYlen(dataObj.yMVEncoded.Length);
+            dataObj.gMHead.setMVCblen(dataObj.cbMVEncoded.Length);
+            dataObj.gMHead.setMVCrlen(dataObj.crMVEncoded.Length);
+
             setFinalMVData();
 
             saveToolStripMenuItem.Enabled = true;
@@ -734,22 +765,24 @@ namespace Compression
             }
         }
 
-        
+        /// <summary>
+        /// Saves the MotionVector data to the finalMVData array. Saved as ints!
+        /// </summary>
         private void setFinalMVData()
         {
             int fd = 0;
             dataObj.finalMVData = new MotionVector[dataObj.yMVEncoded.Length + dataObj.cbMVEncoded.Length + dataObj.crMVEncoded.Length];
-            for (int i = 0; i < dataObj.yDiffEncoded.Length; i++)
+            for (int i = 0; i < dataObj.yMVEncoded.Length; i++)
             {
-                dataObj.finalDiffData[fd++] = dataObj.yDiffEncoded[i];
+                dataObj.finalMVData[fd++] = dataObj.yMVEncoded[i];
             }
-            for (int jj = 0; jj < dataObj.cbDiffEncoded.Length; jj++)
+            for (int jj = 0; jj < dataObj.cbMVEncoded.Length; jj++)
             {
-                dataObj.finalDiffData[fd++] = dataObj.cbDiffEncoded[jj];
+                dataObj.finalMVData[fd++] = dataObj.cbMVEncoded[jj];
             }
-            for (int kk = 0; kk < dataObj.crDiffEncoded.Length; kk++)
+            for (int kk = 0; kk < dataObj.crMVEncoded.Length; kk++)
             {
-                dataObj.finalDiffData[fd++] = dataObj.crDiffEncoded[kk];
+                dataObj.finalMVData[fd++] = dataObj.crMVEncoded[kk];
             }
         }
 
@@ -914,7 +947,7 @@ namespace Compression
             // setup the header information
             // height, width, ylen, cblen, crlen, quality
             writeData(wr, dataObj.gMHead);
-            writeData(wr, dataObj.gHead, dataObj.finalData);
+            writeData(wr, dataObj.gMHead, dataObj.finalData, dataObj.finalDiffData, dataObj.finalMVData);
             wr.Close();
             fs.Close();
         }
@@ -1107,20 +1140,237 @@ namespace Compression
             pb.Image = dataObj.generateBitmap(dataObj.gHead);
         }
 
+        
+        public void openFileMRPPG(string fileName, PictureBox pb) {
 
-        public void openFileMRPPG(string fileName) {
+            this.Text = fileName; // sets the text of the form to the file name
+            BinaryReader re = new BinaryReader(File.OpenRead(fileName));
+            // setup the header information
+            readData(re, dataObj.gMHead);
 
+            Pad padding = new Pad(ref dataObj, dataObj.gMHead);
+
+            dataObj.finalData = new sbyte[dataObj.gMHead.getYlen() + dataObj.gMHead.getCblen() + dataObj.gMHead.getCrlen()];
+            dataObj.finalDiffData = new sbyte[dataObj.gMHead.getDiffYlen() + dataObj.gMHead.getDiffCblen() + dataObj.gMHead.getDiffCrlen()];
+            dataObj.finalMVData = new MotionVector[dataObj.gMHead.getMVYlen() + dataObj.gMHead.getMVCblen() + dataObj.gMHead.getMVCrlen()];
+            for(int kek = 0; kek < dataObj.finalMVData.Length; kek++) dataObj.finalMVData[kek] = new MotionVector();
+
+            dataObj.setyData(new byte[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setCbData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setCrData(new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.yEncoded = new sbyte[dataObj.gMHead.getYlen()];
+            dataObj.cbEncoded = new sbyte[dataObj.gMHead.getCblen()];
+            dataObj.crEncoded = new sbyte[dataObj.gMHead.getCrlen()];
+            dataObj.setdyData(new double[dataObj.paddedWidth, dataObj.paddedHeight]);
+            dataObj.setdCbData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.setdCrData(new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2]);
+            dataObj.yMVEncoded = new MotionVector[dataObj.gMHead.getMVYlen()];
+            dataObj.cbMVEncoded = new MotionVector[dataObj.gMHead.getMVCblen()];
+            dataObj.crMVEncoded = new MotionVector[dataObj.gMHead.getMVCrlen()];
+
+            dataObj.yDiff = new double[(dataObj.paddedWidth / 8), (dataObj.paddedHeight / 8)];
+            dataObj.cbDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
+            dataObj.crDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
+            dataObj.yDiffEncoded = new sbyte[dataObj.gMHead.getDiffYlen()];
+            dataObj.cbDiffEncoded = new sbyte[dataObj.gMHead.getDiffCblen()];
+            dataObj.crDiffEncoded = new sbyte[dataObj.gMHead.getDiffCrlen()];
+
+            dataObj.yDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
+            dataObj.cbDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+            dataObj.crDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+
+            readData(re, dataObj.gMHead, dataObj.finalData, dataObj.finalDiffData, dataObj.finalMVData);
+
+            splitFinalData();
+            splitFinalDiffData();
+            splitFinalMVData();
+
+            sbyte[] tempY, tempCb, tempCr;
+            sbyte[,] stempY, stempCb, stempCr;
+            double[,] tempDY, tempDCb, tempDCr;
+            sbyte[] szztempY, szztempB, szztempR;
+            MotionVector[] mvLArr = new MotionVector[(dataObj.paddedWidth / 8) * (dataObj.paddedHeight / 8)];
+            MotionVector[] mvCbArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
+            MotionVector[] mvCrArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
+
+            dataObj.yEncoded = RLE.unrle(dataObj.yEncoded);
+            dataObj.cbEncoded = RLE.unrle(dataObj.cbEncoded);
+            dataObj.crEncoded = RLE.unrle(dataObj.crEncoded);
+            dataObj.yDiffEncoded = RLE.unrle(dataObj.yDiffEncoded);
+            dataObj.cbDiffEncoded = RLE.unrle(dataObj.cbDiffEncoded);
+            dataObj.crDiffEncoded = RLE.unrle(dataObj.crDiffEncoded);
+
+            // I-Frame setup opening
+            int pos = 0;
+            for (int y = 0; y < dataObj.paddedHeight; y += 8)
+            {
+                for (int x = 0; x < dataObj.paddedWidth; x += 8)
+                {
+                    // DCT, Quantize, ZigZag and RLE
+                    // Y
+                    // block
+                    tempY = block.generateBlocks(dataObj.yEncoded, pos); // put in x, y here for cool spirals
+                    // unzigzag
+                    stempY = zz.unzigzag(tempY);
+                    // inverse quantize
+                    tempDY = q.inverseQuantizeLuma(stempY);
+                    tempDY = dctObj.dinverseDCT(tempDY);
+                    block.putbackd(dataObj.getdyData(), tempDY, x, y);
+                    pos += 64;
+                }
+            }
+            pos = 0;
+            for (int j = 0; j < dataObj.paddedHeight / 2; j += 8)
+            {
+                for (int i = 0; i < dataObj.paddedWidth / 2; i += 8)
+                {
+                    // Cb
+                    // block
+                    tempCb = block.generateBlocks(dataObj.cbEncoded, pos);
+                    // unzigzag
+                    stempCb = zz.unzigzag(tempCb);
+                    // inverse quantize
+                    tempDCb = q.inverseQuantizeData(stempCb);
+                    tempDCb = dctObj.dinverseDCT(tempDCb);
+                    block.putbackd(dataObj.getdCbData(), tempDCb, i, j);
+
+                    // Cr
+                    // block
+                    tempCr = block.generateBlocks(dataObj.crEncoded, pos);
+                    // unzigzag
+                    stempCr = zz.unzigzag(tempCr);
+                    // inverse quantize
+                    tempDCr = q.inverseQuantizeData(stempCr);
+                    tempDCr = dctObj.dinverseDCT(tempDCr);
+                    block.putbackd(dataObj.getdCrData(), tempDCr, i, j);
+                    pos += 64;
+                }
+            }
+            // set pixels
+            //dataObj.setdCbData(Sampler.upsample(dataObj.dCbData, ref dataObj));
+            //dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
+
+            // Save the differences and the size of the array to gMHead
+            // DCT, Quantize, ZigZag, RLE, output
+
+            // DIFFERENCES NEED TO BE UPSAMPLED BEFORE WE USE THEM
+
+            // Pad the data
+
+            pos = 0;
+            for (int y = 0; y < dataObj.yDiffBlock.GetLength(1); y += 8)
+            {
+                for (int x = 0; x < dataObj.yDiffBlock.GetLength(0); x += 8)
+                {
+                    // Y
+                    // block
+                    szztempY = block.generateBlocks(dataObj.yDiffEncoded, x, y);
+                    // unzigzag
+                    stempY = zz.unzigzag(szztempY);
+                    // inverse quantize
+                    tempDY = q.inverseQuantizeLuma(stempY);
+                    tempDY = dctObj.dinverseDCT(tempDY);
+                    block.putbackd(dataObj.yDiffBlock, tempDY, x, y);
+
+                    pos += 64;
+                }
+            }
+            pos = 0;
+            for (int j = 0; j < dataObj.cbDiffBlock.GetLength(1) / 2; j += 8)
+            {
+                for (int i = 0; i < dataObj.cbDiffBlock.GetLength(0) / 2; i += 8)
+                {
+                    // Cb
+                    // block
+                    szztempB = block.generateBlocks(dataObj.cbDiffEncoded, i, j);
+                    // unzigzag
+                    stempCb = zz.unzigzag(szztempB);
+                    // inverse quantize
+                    tempDCb = q.inverseQuantizeData(stempCb);
+                    tempDCb = dctObj.dinverseDCT(tempDCb);
+                    block.putbackd(dataObj.cbDiffBlock, tempDCb, i, j);
+
+                    // Cr
+                    // block
+                    szztempR = block.generateBlocks(dataObj.cbDiffEncoded, i, j);
+                    // unzigzag
+                    stempCr = zz.unzigzag(szztempR);
+                    // inverse quantize
+                    tempDCr = q.inverseQuantizeData(stempCr);
+                    tempDCr = dctObj.dinverseDCT(tempDCr);
+                    block.putbackd(dataObj.crDiffBlock, tempDCr, i, j);
+                    pos += 64;
+                }
+            }
+
+            byte[,] PLtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
+            byte[,] PCbtemp = new byte[dataObj.paddedWidth /2 , dataObj.paddedHeight / 2];
+            byte[,] PCrtemp = new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+
+            Bitmap test = new Bitmap(dataObj.gMHead.getWidth(), dataObj.gMHead.getHeight());
+
+            foreach (MotionVector mv in dataObj.yMVEncoded)
+            {
+                for (int iii = 0; iii < 8; iii++)
+                {
+                    for (int jjj = 0; jjj < 8; jjj++)
+                    {
+                        PLtemp[iii + mv.x, jjj + mv.y] = Convert.ToByte(Math.Max(0, Math.Min(255, (dataObj.dyData[iii + mv.u, jjj + mv.v] + dataObj.yDiffBlock[iii + mv.x, jjj + mv.y]))));
+                    }
+                }
+            }
+
+            foreach (MotionVector mv in dataObj.cbMVEncoded)
+            {
+                for (int iii = 0; iii < 8; iii++)
+                {
+                    for (int jjj = 0; jjj < 8; jjj++)
+                    {
+                        PCbtemp[iii + mv.x, jjj + mv.y] = Convert.ToByte(Math.Max(0, Math.Min(255, (dataObj.dCbData[iii + mv.u, jjj + mv.v] + dataObj.cbDiffBlock[iii + mv.x, jjj + mv.y]))));
+                    }
+                }
+            }
+
+            foreach (MotionVector mv in dataObj.crMVEncoded)
+            {
+                for (int iii = 0; iii < 8; iii++)
+                {
+                    for (int jjj = 0; jjj < 8; jjj++)
+                    {
+                        PCrtemp[iii + mv.x, jjj + mv.y] = Convert.ToByte(Math.Max(0, Math.Min(255, (dataObj.dCrData[iii + mv.u, jjj + mv.v] + dataObj.crDiffBlock[iii + mv.x, jjj + mv.y]))));
+                    }
+                }
+            }
+
+            // upsample cb & cr after to then convert to RGB
+
+            PCbtemp = Sampler.upsample(PCbtemp, ref dataObj);
+            PCrtemp = Sampler.upsample(PCrtemp, ref dataObj);
+
+            dataObj.setyData(PLtemp);
+            dataObj.setCbData(PCbtemp);
+            dataObj.setCrData(PCrtemp);
+
+            dataChanger.YCbCrtoRGB(ref dataObj, dataObj.gMHead);
+
+            test = dataObj.generateBitmap(dataObj.gMHead);
+
+            saveToolStripMenuItem.Enabled = true;
+
+            re.Close();
+            // Set bitmap for picturebox3
+            pictureBox3.Image = test;
         }
 
         /// <summary>
-        /// Writes the header data to the file
+        /// Writes the header data to the file.
         /// </summary>
         /// <remarks>
         /// Writes the header data. This data comes from after we have changed
         /// the data from RGB to YCrCb.
         /// </remarks>
-        /// <param name="file">File to write to</param>
-        /// <param name="header">Header information</param>
+        /// <param name="file">File to write to.</param>
+        /// <param name="header">Header information.</param>
         private void writeData(BinaryWriter file, Header header)
         {
             file.Write(header.getHeight());
@@ -1131,6 +1381,11 @@ namespace Compression
             file.Write(header.getCrlen());
         }
 
+        /// <summary>
+        /// Writes the motion header data to the file.
+        /// </summary>
+        /// <param name="file">File to write to.</param>
+        /// <param name="header">MHeader information.</param>
         private void writeData(BinaryWriter file, MHeader header)
         {
             file.Write(header.getHeight());
@@ -1142,6 +1397,9 @@ namespace Compression
             file.Write(header.getDiffYlen());
             file.Write(header.getDiffCblen());
             file.Write(header.getDiffCrlen());
+            file.Write(header.getMVYlen());
+            file.Write(header.getMVCblen());
+            file.Write(header.getMVCrlen());
         }
 
         /// <summary>
@@ -1151,9 +1409,9 @@ namespace Compression
         /// Writes the final data, loaded earlier into the Data object, and
         /// writes the data as sbytes to the file after being RLE'ed.
         /// </remarks>
-        /// <param name="file">File to write to</param>
-        /// <param name="header">Header information for data size</param>
-        /// <param name="data">Data to write</param>
+        /// <param name="file">File to write to.</param>
+        /// <param name="header">Header information for data size.</param>
+        /// <param name="data">Data to write.</param>
         private void writeData(BinaryWriter file, Header header, sbyte[] data)
         {
             int c = 0;
@@ -1165,7 +1423,16 @@ namespace Compression
                 file.Write(data[c++]);
         }
 
-        private void writeData(BinaryWriter file, MHeader header, sbyte[] data, sbyte[] diffdata, sbyte[] mvData)
+        /// <summary>
+        /// Writes the I frame, Difference frame and motion vector data to the 
+        /// file.
+        /// </summary>
+        /// <param name="file">File to write to.</param>
+        /// <param name="header">MHeader information for the data size.</param>
+        /// <param name="data">I frame data.</param>
+        /// <param name="diffdata">Difference frame data.</param>
+        /// <param name="mvData">Motion Vector data.</param>
+        private void writeData(BinaryWriter file, MHeader header, sbyte[] data, sbyte[] diffdata, MotionVector[] mvdata)
         {
             int c = 0; // I frame
             for (int i = 0; i < header.getYlen(); i++)
@@ -1174,6 +1441,7 @@ namespace Compression
                 file.Write(data[c++]);
             for (int i = 0; i < header.getCrlen(); i++)
                 file.Write(data[c++]);
+
             c = 0; // Diff data
             for (int i = 0; i < header.getDiffYlen(); i++)
                 file.Write(diffdata[c++]);
@@ -1181,13 +1449,29 @@ namespace Compression
                 file.Write(diffdata[c++]);
             for (int i = 0; i < header.getDiffCrlen(); i++)
                 file.Write(diffdata[c++]);
+
             c = 0; // MotionVectors
             for (int i = 0; i < header.getMVYlen(); i++)
-                file.Write(mvData[c++]);
+            {
+                file.Write(mvdata[c].x);
+                file.Write(mvdata[c].y);
+                file.Write(mvdata[c].u);
+                file.Write(mvdata[c++].v);
+            }
             for (int i = 0; i < header.getMVCblen(); i++)
-                file.Write(mvData[c++]);
+            {
+                file.Write(mvdata[c].x);
+                file.Write(mvdata[c].y);
+                file.Write(mvdata[c].u);
+                file.Write(mvdata[c++].v);
+            }
             for (int i = 0; i < header.getMVCrlen(); i++)
-                file.Write(mvData[c++]);
+            {
+                file.Write(mvdata[c].x);
+                file.Write(mvdata[c].y);
+                file.Write(mvdata[c].u);
+                file.Write(mvdata[c++].v);
+            }
         }
 
         /// <summary>
@@ -1197,8 +1481,8 @@ namespace Compression
         /// Reads data into the header object frome the specifed file.
         /// Necessary to read the data in properly.
         /// </remarks>
-        /// <param name="file">File to read data in from</param>
-        /// <param name="header">Header to read the data into</param>
+        /// <param name="file">File to read data in from.</param>
+        /// <param name="header">Header to read the data into.</param>
         private void readData(BinaryReader file, Header header)
         {
             header.setHeight(file.ReadInt16());
@@ -1207,6 +1491,27 @@ namespace Compression
             header.setYlen(file.ReadInt32());
             header.setCblen(file.ReadInt32());
             header.setCrlen(file.ReadInt32());
+        }
+
+        /// <summary>
+        /// Reads the header data of the motion file into the Data object.
+        /// </summary>
+        /// <param name="file">File to read the data in from.</param>
+        /// <param name="header">Header to read the data into.</param>
+        private void readData(BinaryReader file, MHeader header)
+        {
+            header.setHeight(file.ReadInt16());
+            header.setWidth(file.ReadInt16());
+            header.setQuality(file.ReadByte());
+            header.setYlen(file.ReadInt32());
+            header.setCblen(file.ReadInt32());
+            header.setCrlen(file.ReadInt32());
+            header.setDiffYlen(file.ReadInt32());
+            header.setDiffCblen(file.ReadInt32());
+            header.setDiffCrlen(file.ReadInt32());
+            header.setMVYlen(file.ReadInt32());
+            header.setMVCblen(file.ReadInt32());
+            header.setMVCrlen(file.ReadInt32());
         }
 
         /// <summary>
@@ -1239,5 +1544,67 @@ namespace Compression
                 data[c++] = file.ReadSByte();
             }
         }
+
+        /// <summary>
+        /// Reads the rest of the data into the data, diffdata and mvdata 
+        /// arrays.
+        /// </summary>
+        /// <param name="file">File to read the data in from.</param>
+        /// <param name="header">MHeader for the array sizes.</param>
+        /// <param name="data">I frame data array.</param>
+        /// <param name="diffdata">Difference frame data array.</param>
+        /// <param name="mvdata">Motion Vector data array.</param>
+        private void readData(BinaryReader file, MHeader header, sbyte[] data, sbyte[] diffdata, MotionVector[] mvdata)
+        {
+
+            Pad p = new Pad(ref dataObj, header);
+
+            // I frame data
+            int c = 0;
+            for (int i = 0; i < header.getYlen(); i++)
+            {
+                data[c++] = file.ReadSByte();
+            }
+            for (int j = 0; j < header.getCblen(); j++)
+            {
+                data[c++] = file.ReadSByte();
+            }
+            for (int k = 0; k < header.getCrlen(); k++)
+            {
+                data[c++] = file.ReadSByte();
+            }
+            c = 0; // Diff data
+            for (int i = 0; i < header.getDiffYlen(); i++)
+                diffdata[c++] = file.ReadSByte();
+            for (int i = 0; i < header.getDiffCblen(); i++)
+                diffdata[c++] = file.ReadSByte();
+            for (int i = 0; i < header.getDiffCrlen(); i++)
+                diffdata[c++] = file.ReadSByte();
+
+            c = 0; // MotionVectors
+            for (int i = 0; i < header.getMVYlen(); i++)
+            {
+                mvdata[c].x = file.ReadInt32();
+                mvdata[c].y = file.ReadInt32();
+                mvdata[c].u = file.ReadInt32();
+                mvdata[c++].v = file.ReadInt32();
+            }
+            for (int i = 0; i < header.getMVCblen(); i++)
+            {
+                mvdata[c].x = file.ReadInt32();
+                mvdata[c].y = file.ReadInt32();
+                mvdata[c].u = file.ReadInt32();
+                mvdata[c++].v = file.ReadInt32();
+            }
+            for (int i = 0; i < header.getMVCrlen(); i++)
+            {
+                mvdata[c].x = file.ReadInt32();
+                mvdata[c].y = file.ReadInt32();
+                mvdata[c].u = file.ReadInt32();
+                mvdata[c++].v = file.ReadInt32();
+            }
+
+        }
+
     }
 }

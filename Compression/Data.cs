@@ -224,7 +224,8 @@ namespace Compression
         /// <remarks>
         /// Generates the bitmap for the image
         /// </remarks>
-        /// <returns></returns>
+        /// <param name="head">Header of the bitmap.</param>
+        /// <returns>Bitmap</returns>
         public Bitmap generateBitmap(Header head) {
             Bitmap outBmp = new Bitmap(head.getWidth(), head.getHeight()); 
             for (int y = 0; y < head.getHeight(); y++) 
@@ -232,6 +233,27 @@ namespace Compression
                 for (int x = 0; x < head.getWidth(); x++) 
                 { 
                     outBmp.SetPixel(x, y, Color.FromArgb(rData[x,y], gData[x,y], bData[x,y])); 
+                }
+            }
+            return outBmp;
+        }
+
+        /// <summary>
+        /// Generates the Bitmap for the image data
+        /// </summary>
+        /// <remarks>
+        /// Generates the bitmap for the image
+        /// </remarks>
+        /// <param name="head">MHeader of the bitmap.</param>
+        /// <returns>Bitmap</returns>
+        public Bitmap generateBitmap(MHeader head)
+        {
+            Bitmap outBmp = new Bitmap(head.getWidth(), head.getHeight());
+            for (int y = 0; y < head.getHeight(); y++)
+            {
+                for (int x = 0; x < head.getWidth(); x++)
+                {
+                    outBmp.SetPixel(x, y, Color.FromArgb(rData[x, y], gData[x, y], bData[x, y]));
                 }
             }
             return outBmp;

@@ -36,7 +36,7 @@ namespace Compression
         /// </summary>
         public MotionVector()
         {
-            
+            //x = 0; y = 0; u = 0; v = 0;
         }
 
         /// <summary>
