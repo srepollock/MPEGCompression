@@ -393,25 +393,25 @@ namespace Compression
             dataObj.yDiff = new double[(dataObj.paddedWidth / 8), (dataObj.paddedHeight / 8)];
             dataObj.CbData = padding.padData(dataObj.CbData, padding.padW, padding.padH, dataObj, 1);
             dataObj.CbData2 = padding.padData(dataObj.CbData2, padding.padW, padding.padH, dataObj, 2);
-            MotionVector[] mvCbArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
-            dataObj.cbDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
+            MotionVector[] mvCbArr = new MotionVector[((dataObj.paddedWidth / 8)) * ((dataObj.paddedHeight / 8))];
+            dataObj.cbDiff = new double[((dataObj.paddedWidth / 8)), ((dataObj.paddedHeight / 8))];
             dataObj.CrData = padding.padData(dataObj.CrData, padding.padW, padding.padH, dataObj, 1);
             dataObj.CrData2 = padding.padData(dataObj.CrData2, padding.padW, padding.padH, dataObj, 2);
-            MotionVector[] mvCrArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
-            dataObj.crDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
+            MotionVector[] mvCrArr = new MotionVector[((dataObj.paddedWidth / 8)) * ((dataObj.paddedHeight / 8))];
+            dataObj.crDiff = new double[((dataObj.paddedWidth / 8)), ((dataObj.paddedHeight / 8))];
 
-            dataObj.CbData = Sampler.subsample(dataObj.CbData, ref dataObj);
-            dataObj.CbData2 = Sampler.subsample(dataObj.CbData2, ref dataObj);
-            dataObj.CrData = Sampler.subsample(dataObj.CrData, ref dataObj);
-            dataObj.CrData2 = Sampler.subsample(dataObj.CrData2, ref dataObj);
+            //dataObj.CbData = Sampler.subsample(dataObj.CbData, ref dataObj);
+            //dataObj.CbData2 = Sampler.subsample(dataObj.CbData2, ref dataObj);
+            //dataObj.CrData = Sampler.subsample(dataObj.CrData, ref dataObj);
+            //dataObj.CrData2 = Sampler.subsample(dataObj.CrData2, ref dataObj);
 
             dataObj.yDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
-            dataObj.cbDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
-            dataObj.crDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+            dataObj.cbDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
+            dataObj.crDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
 
             dataObj.yDiffEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
-            dataObj.cbDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
-            dataObj.crDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
+            dataObj.cbDiffEncoded = new sbyte[(dataObj.paddedHeight) * (dataObj.paddedWidth)];
+            dataObj.crDiffEncoded = new sbyte[(dataObj.paddedHeight) * (dataObj.paddedWidth)];
 
             double[,] outBlock = new double[8, 8];
 
@@ -434,9 +434,9 @@ namespace Compression
             xx = 0;
             yy = 0;
             minDiff = 0;
-            for (int x = 0; x < dataObj.paddedWidth / 2; x += 8)
+            for (int x = 0; x < dataObj.paddedWidth; x += 8)
             {
-                for (int y = 0; y < dataObj.paddedHeight / 2; y += 8)
+                for (int y = 0; y < dataObj.paddedHeight; y += 8)
                 {
                     minDiff = 0;
                     minDiff2 = 0;
@@ -638,8 +638,8 @@ namespace Compression
             //* TESTING *//
 
             byte[,] PLtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
-            byte[,] PCbtemp = new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
-            byte[,] PCrtemp = new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+            byte[,] PCbtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
+            byte[,] PCrtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
 
             Bitmap test = new Bitmap(dataObj.mv1Head.getWidth(), dataObj.mv1Head.getHeight());
 
@@ -683,8 +683,8 @@ namespace Compression
                 }
             }
 
-            PCbtemp = Sampler.upsample(PCbtemp, ref dataObj);
-            PCrtemp = Sampler.upsample(PCrtemp, ref dataObj);
+            //PCbtemp = Sampler.upsample(PCbtemp, ref dataObj);
+            //PCrtemp = Sampler.upsample(PCrtemp, ref dataObj);
 
             dataObj.setyData(PLtemp);
             dataObj.setCbData(PCbtemp);
@@ -1169,15 +1169,15 @@ namespace Compression
             dataObj.crMVEncoded = new MotionVector[dataObj.gMHead.getMVCrlen()];
 
             dataObj.yDiff = new double[(dataObj.paddedWidth / 8), (dataObj.paddedHeight / 8)];
-            dataObj.cbDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
-            dataObj.crDiff = new double[((dataObj.paddedWidth / 8) / 2), ((dataObj.paddedHeight / 8) / 2)];
+            dataObj.cbDiff = new double[((dataObj.paddedWidth / 8)), ((dataObj.paddedHeight / 8))];
+            dataObj.crDiff = new double[((dataObj.paddedWidth / 8)), ((dataObj.paddedHeight / 8))];
             dataObj.yDiffEncoded = new sbyte[dataObj.gMHead.getDiffYlen()];
             dataObj.cbDiffEncoded = new sbyte[dataObj.gMHead.getDiffCblen()];
             dataObj.crDiffEncoded = new sbyte[dataObj.gMHead.getDiffCrlen()];
 
             dataObj.yDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
-            dataObj.cbDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
-            dataObj.crDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+            dataObj.cbDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
+            dataObj.crDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
 
             readData(re, dataObj.gMHead, dataObj.finalData, dataObj.finalDiffData, dataObj.finalMVData);
 
@@ -1190,8 +1190,8 @@ namespace Compression
             double[,] tempDY, tempDCb, tempDCr;
             sbyte[] szztempY, szztempB, szztempR;
             MotionVector[] mvLArr = new MotionVector[(dataObj.paddedWidth / 8) * (dataObj.paddedHeight / 8)];
-            MotionVector[] mvCbArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
-            MotionVector[] mvCrArr = new MotionVector[((dataObj.paddedWidth / 8) / 2) * ((dataObj.paddedHeight / 8) / 2)];
+            MotionVector[] mvCbArr = new MotionVector[((dataObj.paddedWidth / 8)) * ((dataObj.paddedHeight / 8))];
+            MotionVector[] mvCrArr = new MotionVector[((dataObj.paddedWidth / 8)) * ((dataObj.paddedHeight / 8))];
 
             dataObj.yEncoded = RLE.unrle(dataObj.yEncoded);
             dataObj.cbEncoded = RLE.unrle(dataObj.cbEncoded);
@@ -1303,9 +1303,12 @@ namespace Compression
                 }
             }
 
+            dataObj.dCbData = Sampler.upsample(dataObj.dCbData, ref dataObj);
+            dataObj.dCrData = Sampler.upsample(dataObj.dCrData, ref dataObj);
+
             byte[,] PLtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
-            byte[,] PCbtemp = new byte[dataObj.paddedWidth /2 , dataObj.paddedHeight / 2];
-            byte[,] PCrtemp = new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+            byte[,] PCbtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
+            byte[,] PCrtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
 
             Bitmap test = new Bitmap(dataObj.gMHead.getWidth(), dataObj.gMHead.getHeight());
 
@@ -1343,9 +1346,6 @@ namespace Compression
             }
 
             // upsample cb & cr after to then convert to RGB
-
-            PCbtemp = Sampler.upsample(PCbtemp, ref dataObj);
-            PCrtemp = Sampler.upsample(PCrtemp, ref dataObj);
 
             dataObj.setyData(PLtemp);
             dataObj.setCbData(PCbtemp);
