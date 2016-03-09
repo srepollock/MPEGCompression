@@ -1,7 +1,8 @@
 # ToDo
 ---
-- Saving motion vectors to the file
-	- need to save the motion vectors in a suitable format. They are not to be RLE'd, as that may just mess things up. We will have to see.
+- Fix motion vectors to display the image properly
+    - something wrong with opening my data
+- Load in the I-Frame when loading from a .mrippeg file
 - Comment final changes
 - Make functions to initialize the arrays of the data object
 	- IMPORTANT

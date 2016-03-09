@@ -1246,6 +1246,14 @@ namespace Compression
                     pos += 64;
                 }
             }
+            Bitmap iframe = new Bitmap(dataObj.gMHead.getWidth(), dataObj.gMHead.getHeight());
+            dataObj.setdCbData(Sampler.upsample(dataObj.dCbData, ref dataObj));
+            dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
+            dataChanger.sYCbCrtoRGB(ref dataObj, dataObj.gMHead);
+
+            iframe = dataObj.generateBitmap(dataObj.gMHead);
+            pictureBox2.Image = iframe;
+
             // set pixels
             //dataObj.setdCbData(Sampler.upsample(dataObj.dCbData, ref dataObj));
             //dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
