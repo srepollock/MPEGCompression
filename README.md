@@ -1,4 +1,4 @@
-# 4995-Compression
+# 4932-Compression
 COMP4995 JPG Compression
 
 ## Usage
