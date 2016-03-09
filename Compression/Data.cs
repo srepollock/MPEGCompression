@@ -50,6 +50,10 @@ namespace Compression
         public double[,] cbDiff;
         public double[,] crDiff;
 
+        public double[,] yDiffBlock;
+        public double[,] cbDiffBlock;
+        public double[,] crDiffBlock;
+
         public double[,] dyData;
         public double[,] dCbData;
         public double[,] dCrData;
@@ -216,11 +220,11 @@ namespace Compression
         /// Generates the bitmap for the image
         /// </remarks>
         /// <returns></returns>
-        public Bitmap generateBitmap() {
-            Bitmap outBmp = new Bitmap(gHead.getWidth(), gHead.getHeight()); 
-            for (int y = 0; y < gHead.getHeight(); y++) 
+        public Bitmap generateBitmap(Header head) {
+            Bitmap outBmp = new Bitmap(head.getWidth(), head.getHeight()); 
+            for (int y = 0; y < head.getHeight(); y++) 
             { 
-                for (int x = 0; x < gHead.getWidth(); x++) 
+                for (int x = 0; x < head.getWidth(); x++) 
                 { 
                     outBmp.SetPixel(x, y, Color.FromArgb(rData[x,y], gData[x,y], bData[x,y])); 
                 }

@@ -167,5 +167,29 @@ namespace Compression
                 }
             }
         }
+
+        /// <summary>
+        /// Puts a 2D double array back into the original position.
+        /// </summary>
+        /// <remarks>
+        /// This puts the 8x8 block of doubles back into the original data
+        /// 2D array.
+        /// </remarks>
+        /// <param name="original">Original data array (where we put the data back)</param>
+        /// <param name="data">Data to put back into the array</param>
+        /// <param name="offsetx">X offset of where to put the data</param>
+        /// <param name="offsety">Y offset of where to put the data</param>
+        public void putbackd(double[,] original, byte[,] data, int offsetx, int offsety)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                {
+                    for (int x = 0; x < 8; x++)
+                    {
+                        original[offsetx + x, offsety + y] = data[x, y];
+                    }
+                }
+            }
+        }
     }
 }

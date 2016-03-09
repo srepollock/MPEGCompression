@@ -20,7 +20,7 @@ namespace Compression
         /// <summary>
         /// Public modified height, widht, padded heght, width
         /// </summary>
-        public int modH, modW, padW, padH;
+        public int modH, modW, padW, padH, modHd, modWd, padHd, padWd;
 
         /// <summary>
         /// Takes in the Data object and saves the padded
@@ -102,6 +102,27 @@ namespace Compression
             }
         }
 
+        public Pad() { }
+
+        /// <summary>
+        /// Saves pad data to padHd and padWd, then pads the double array passed in.
+        /// </summary>
+        /// <param name="dataObj"></param>
+        /// <param name="padding"></param>
+        public void padDobubleArry(ref Data dataObj, ref double[,] padding)
+        {
+            modWd = padding.GetLength(0) % 16;
+            modHd = padding.GetLength(1) % 16;
+            padWd = 0;
+            padHd = 0;
+            if(modHd != 0 || modWd != 0)
+            {
+                padWd = (16 - modWd == 16) ? 0 : 16 - modWd;
+                padHd = (16 - modHd == 16) ? 0 : 16 - modHd;
+                padding = padDData(padding, padWd, padHd);
+            }
+        }
+
         /// <summary>
         /// Pads the data taken in, and returns the new sized array.
         /// </summary>
@@ -119,6 +140,48 @@ namespace Compression
         {
             int width = dataObj.gHead.getWidth(), height = dataObj.gHead.getHeight();
             byte[,] temp = new byte[width + padxby, height + padyby];
+            for (int y = 0; y < height + padyby; y++)
+            {
+                for (int x = 0; x < width + padxby; x++)
+                {
+                    if (x >= width && y >= height)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (x >= width)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else if (y >= height)
+                    {
+                        temp[x, y] = 0;
+                    }
+                    else
+                    {
+                        temp[x, y] = data[x, y];
+                    }
+                }
+            }
+            return temp;
+        }
+
+        /// <summary>
+        /// Pads the data taken in, and returns the new sized array.
+        /// </summary>
+        /// <remarks>
+        /// Pad data by a certain width and height. This will ensure
+        /// that the data is divisable by 8 and 2. Because the data is cut
+        /// in half, and then needs to be cut up into 8x8 blocks, it needs 
+        /// to be a mod of 16 (explained in the Pad class).
+        /// </remarks>
+        /// <param name="data">Original data</param>
+        /// <param name="padxby">Pad the width by x amount</param>
+        /// <param name="padyby">Pad the height by y amount</param>
+        /// <returns>Padded data in a 2D double array</returns>
+        private double[,] padDData(double[,] data, int padxby, int padyby)
+        {
+            int width = data.GetLength(0), height = data.GetLength(1);
+            double[,] temp = new double[width + padxby, height + padyby];
             for (int y = 0; y < height + padyby; y++)
             {
                 for (int x = 0; x < width + padxby; x++)

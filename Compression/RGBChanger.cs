@@ -164,11 +164,11 @@ namespace Compression
         /// data back to the Data object.
         /// </remarks>
         /// <param name="dataObj">Data object to read and save the data from/to</param>
-        public void YCbCrtoRGB(ref Data dataObj)
+        public void YCbCrtoRGB(ref Data dataObj, Header head)
         {
 
-            int width = dataObj.gHead.getWidth();
-            int height = dataObj.gHead.getHeight();
+            int width = head.getWidth();
+            int height = head.getHeight();
             byte[,] rData = new byte[width, height];
             byte[,] gData = new byte[width, height];
             byte[,] bData = new byte[width, height];

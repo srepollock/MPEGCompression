@@ -31,21 +31,24 @@ namespace Compression
         /// <param name="i">Where to move in the macroblock</param>
         /// <param name="j">Where to move in the macroblock</param>
         /// <returns>The mean absolute difference as a double</returns>
-        public static double MAD(int N, int p, byte[,] C, byte[,] R, int x, int y, int i, int j)
+        public static double MAD(int N, int p, byte[,] C, byte[,] R, int x, int y, int i, int j, ref double[,] diffBlock)
         {
                 // (x, y) is the upper left corner of the macroblock
             double diff; // difference calculated
+            double curDiff = 0;
                 // N is the size of the MACROBLOCK
-                    diff = 0;
-                    for (int k = 0; k < N; k++)
-                    {
-                        for (int l = 0; l < N; l++)
-                        {
-                            // C is the Target Frame, R is the Reference Frame
-                                // also check if we have gone out of bounds, don't add
-                            diff += C[x + k, y + l] - R[i + k, j + l];
-                        }
-                    }
+            diff = 0;
+            for (int k = 0; k < N; k++)
+            {
+                for (int l = 0; l < N; l++)
+                {
+                // C is the Target Frame, R is the Reference Frame
+                // also check if we have gone out of bounds, don't add 
+                    curDiff = C[x + k, y + l] - R[i + k, j + l];
+                    diffBlock[k, l] = curDiff;
+                    diff += curDiff;
+                }
+            }
             diff = (1 / Math.Pow(N, 2)) * diff;
             return diff;
         }
@@ -66,31 +69,30 @@ namespace Compression
         /// <param name="dataObj">Data object to get the width and height from</param>
         /// <param name="minDiff">minDifference to save for use in the outside object.</param>
         /// <returns>MotionVector with the coords of the (x,y) origin and where to (u,v) difference is</returns>
-        public static MotionVector seqMVSearch(int N, int p, byte[,] C, byte[,]R, int x, int y, Data dataObj, double minDiff)
+        public static MotionVector seqMVSearch(int N, int p, byte[,] C, byte[,]R, int x, int y, Data dataObj, ref double minDiff, ref double[,] outBlock)
         {
             int u = x, v = y; // Vector (x-u, y-v), set to origin point initially
             MotionVector mv;
-            minDiff = MAD(N, p, C, R, x, y, x, y); // Init
+            double[,] diffBlock = new double[N, N], bestBlock = new double[N, N];
+            minDiff = MAD(N, p, C, R, x, y, x, y, ref bestBlock); // Init
             for(int i = x-p; i < x+p; i++)
             {
                 if (i < 0 || i + N > dataObj.paddedWidth) continue;
                 for(int j = y-p; j < y+p; j++)
                 {
                     if (j < 0 || j + N > dataObj.paddedHeight) continue;
-                    double curDiff = MAD(N, p, C, R, x, y, i, j);
+                    double curDiff = MAD(N, p, C, R, x, y, i, j, ref diffBlock);
                     if(Math.Abs(curDiff) < Math.Abs(minDiff))
                     {
                         minDiff = curDiff;
                         u = i; // get the coords for MV
                         v = j;
+                        bestBlock = diffBlock;
                     }
                 }
             }
-            if(u == x && v == y)
-            {
-                u = x + 1;
-            }
             mv = new MotionVector(x, y, u, v);
+            outBlock = bestBlock;
             return mv;
         }
 
@@ -110,31 +112,30 @@ namespace Compression
         /// <param name="dataObj">Data object to get the width and height from.</param>
         /// <param name="minDiff">minDifference to save for use in the outside object.</param>
         /// <returns>MotionVector with the coords of the (x,y) origin and where to (u,v) difference is</returns>
-        public static MotionVector chromaSeqMVSearch(int N, int p, byte[,] C, byte[,] R, int x, int y, Data dataObj, double minDiff)
+        public static MotionVector chromaSeqMVSearch(int N, int p, byte[,] C, byte[,] R, int x, int y, Data dataObj, ref double minDiff, ref double[,] outBlock)
         {
             int u = x, v = y; // Vector (x-u, y-v), set to origin point initially
             MotionVector mv;
-            minDiff = MAD(N, p, C, R, x, y, x, y); // Init
+            double[,] diffBlock = new double[N, N], bestBlock = new double[N, N];
+            minDiff = MAD(N, p, C, R, x, y, x, y, ref diffBlock); // Init
             for (int i = x - p; i < x + p; i++)
             {
                 if (i < 0 || i + N > dataObj.paddedWidth / 2) continue;
                 for (int j = y - p; j < y + p; j++)
                 {
                     if (j < 0 || j + N > dataObj.paddedHeight / 2) continue;
-                    double curDiff = MAD(N, p, C, R, x, y, i, j);
+                    double curDiff = MAD(N, p, C, R, x, y, i, j, ref diffBlock);
                     if (Math.Abs(curDiff) < Math.Abs(minDiff))
                     {
                         minDiff = curDiff;
                         u = i; // get the coords for MV
                         v = j;
+                        bestBlock = diffBlock;
                     }
                 }
             }
-            if (u == x && v == y)
-            {
-                u = x + 1;
-            }
             mv = new MotionVector(x, y, u, v);
+            outBlock = bestBlock;
             return mv;
         }
     }

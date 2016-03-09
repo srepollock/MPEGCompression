@@ -257,14 +257,14 @@ namespace Compression
             // upsample data
             dataObj.setCbData(Sampler.upsample(dataObj.getCbData(), ref dataObj));
             dataObj.setCrData(Sampler.upsample(dataObj.getCrData(), ref dataObj));
-            dataChanger.YCbCrtoRGB(ref dataObj);
+            dataChanger.YCbCrtoRGB(ref dataObj, dataObj.gHead);
             dataChanger = new RGBChanger();
             ShowYButton.Enabled = true;
             showCbButton.Enabled = true;
             ShowCrButton.Enabled = true;
             showYCbCrButton.Enabled = true;
             saveToolStripMenuItem.Enabled = true;
-            pictureBox2.Image = dataObj.generateBitmap();
+            pictureBox2.Image = dataObj.generateBitmap(dataObj.gHead);
         }
 
         /// <summary>
@@ -374,13 +374,17 @@ namespace Compression
             dataObj.CrData = Sampler.subsample(dataObj.CrData, ref dataObj);
             dataObj.CrData2 = Sampler.subsample(dataObj.CrData2, ref dataObj);
 
-
+            dataObj.yDiffBlock = new double[dataObj.paddedWidth, dataObj.paddedHeight];
+            dataObj.cbDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+            dataObj.crDiffBlock = new double[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
 
             dataObj.yDiffEncoded = new sbyte[dataObj.paddedHeight * dataObj.paddedWidth];
             dataObj.cbDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
             dataObj.crDiffEncoded = new sbyte[(dataObj.paddedHeight / 2) * (dataObj.paddedWidth / 2)];
 
             dataObj.yDiff = new double[(dataObj.paddedWidth / 8), (dataObj.paddedHeight / 8)];
+
+            double[,] outBlock = new double[8, 8];
 
             int z = 0;
             int xx = 0, yy = 0;
@@ -391,7 +395,8 @@ namespace Compression
                 {
                     minDiff = 0;
                     // luma first
-                    mvLArr[z++] = MotionCompesation.seqMVSearch(8, 8, dataObj.yData, dataObj.yData2, x, y, dataObj, minDiff);
+                    mvLArr[z++] = MotionCompesation.seqMVSearch(8, 8, dataObj.yData, dataObj.yData2, x, y, dataObj, ref minDiff, ref outBlock);
+                    block.putbackd(dataObj.yDiffBlock, outBlock, x, y);
                     dataObj.yDiff[xx, yy++] = minDiff;
                 }
                 xx++; yy = 0;
@@ -406,8 +411,10 @@ namespace Compression
                 {
                     minDiff = 0;
                     minDiff2 = 0;
-                    mvCbArr[z] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CbData, dataObj.CbData2, x, y, dataObj, minDiff);
-                    mvCrArr[z++] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CrData, dataObj.CrData2, x, y, dataObj, minDiff2);
+                    mvCbArr[z] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CbData, dataObj.CbData2, x, y, dataObj, ref minDiff, ref outBlock);
+                    block.putbackd(dataObj.cbDiffBlock, outBlock, x, y);
+                    mvCrArr[z++] = MotionCompesation.chromaSeqMVSearch(8, 8, dataObj.CrData, dataObj.CrData2, x, y, dataObj, ref minDiff2, ref outBlock);
+                    block.putbackd(dataObj.crDiffBlock, outBlock, x, y);
                     dataObj.cbDiff[xx, yy] = minDiff;
                     dataObj.crDiff[xx, yy++] = minDiff2;
                 }
@@ -420,7 +427,7 @@ namespace Compression
                 Pen redPen = new Pen(Color.Red, 1);
                 // just draw the motion vector(x,y)(x1,y1) coords
                 foreach (MotionVector vec in mvLArr)
-                   graphics.DrawLine(redPen, vec.x + 4, vec.y + 4, vec.u + 4, vec.v + 4);
+                   graphics.DrawLine(redPen, vec.x + 4, vec.y + 4, vec.u + 5, vec.v + 4);
             }
 
             // I Frame
@@ -499,19 +506,23 @@ namespace Compression
             // update the RGBChanger data to what we have in the dataObj
             setFinalData(); // GOOD
 
-                // ** SOMETHING WRONG HERE. NEED TO FIX THE SIZE OF THE ARRAYS ** //
             // Save the differences and the size of the array to gMHead
             // DCT, Quantize, ZigZag, RLE, output
+
+            // DIFFERENCES NEED TO BE UPSAMPLED BEFORE WE USE THEM
+
+            // Pad the data
+
             pos = 0;
             sz = 0;
-            for (int y = 0; y < dataObj.paddedHeight / 8; y += 8)
+            for (int y = 0; y < dataObj.yDiffBlock.GetLength(1); y += 8)
             {
-                for (int x = 0; x < dataObj.paddedWidth / 8; x += 8)
+                for (int x = 0; x < dataObj.yDiffBlock.GetLength(0); x += 8)
                 {
                     sz += 64;
                     // (add 128 before)DCT, Quantize, ZigZag and RLE
                     // Y
-                    tempDY = block.generate2DBlocks(dataObj.yDiff, x, y);
+                    tempDY = block.generate2DBlocks(dataObj.yDiffBlock, x, y);
                     tempDY = dctObj.forwardDCT(tempDY);
                     // quantize
                     stempY = q.quantizeLuma(tempDY);
@@ -521,18 +532,26 @@ namespace Compression
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.yDiffEncoded, sz);
                     Buffer.BlockCopy(szztempY, 0, dataObj.yDiffEncoded, pos, 64);
+
+                    // unzigzag
+                    stempY = zz.unzigzag(szztempY);
+                    // inverse quantize
+                    tempDY = q.inverseQuantizeLuma(stempY);
+                    tempDY = dctObj.dinverseDCT(tempDY);
+                    block.putbackd(dataObj.yDiffBlock, tempDY, x, y);
+
                     pos += 64;
                 }
             }
             pos = 0;
             sz = 0;
-            for (int j = 0; j < dataObj.paddedHeight / 32; j ++)
+            for (int j = 0; j < dataObj.cbDiffBlock.GetLength(1) / 2; j += 8)
             {
-                for (int i = 0; i < dataObj.paddedWidth / 32; i ++)
+                for (int i = 0; i < dataObj.cbDiffBlock.GetLength(0) / 2; i += 8)
                 {
                     sz += 64;
                     // Cb (data is subsampled)
-                    tempDCb = block.generate2DBlocks(dataObj.cbDiff, i, j);
+                    tempDCb = block.generate2DBlocks(dataObj.cbDiffBlock, i, j);
                     tempDCb = dctObj.forwardDCT(tempDCb);
                     // quantize
                     stempCb = q.quantizeData(tempDCb);
@@ -543,8 +562,15 @@ namespace Compression
                     Array.Resize<sbyte>(ref dataObj.cbDiffEncoded, sz);
                     Buffer.BlockCopy(szztempB, 0, dataObj.cbDiffEncoded, pos, 64);
 
+                    // unzigzag
+                    stempCb = zz.unzigzag(szztempB);
+                    // inverse quantize
+                    tempDCb = q.inverseQuantizeData(stempCb);
+                    tempDCb = dctObj.dinverseDCT(tempDCb);
+                    block.putbackd(dataObj.cbDiffBlock, tempDCb, i, j);
+
                     // Cr (data is subsampled)
-                    tempDCr = block.generate2DBlocks(dataObj.crDiff, i, j);
+                    tempDCr = block.generate2DBlocks(dataObj.crDiffBlock, i, j);
                     tempDCr = dctObj.forwardDCT(tempDCr);
                     // quantize
                     stempCr = q.quantizeData(tempDCr);
@@ -554,22 +580,93 @@ namespace Compression
                     // put the data into the final array here with an offset of i+=64 for each array
                     Array.Resize<sbyte>(ref dataObj.crDiffEncoded, sz);
                     Buffer.BlockCopy(szztempR, 0, dataObj.crDiffEncoded, pos, 64);
+
+                    // unzigzag
+                    stempCr = zz.unzigzag(szztempB);
+                    // inverse quantize
+                    tempDCr = q.inverseQuantizeData(stempCr);
+                    tempDCr = dctObj.dinverseDCT(tempDCr);
+                    block.putbackd(dataObj.crDiffBlock, tempDCr, i, j);
+
                     pos += 64;
                 }
             }
-            setFinalDiffData();
+            setFinalDiffData(); // GOOD
 
-            dataObj.gMHead.setDiffYlen(dataObj.yDiff.Length);
-            dataObj.gMHead.setDiffCblen(dataObj.cbDiff.Length);
-            dataObj.gMHead.setDiffCrlen(dataObj.crDiff.Length);
+            dataObj.gMHead.setDiffYlen(dataObj.yDiffBlock.Length);
+            dataObj.gMHead.setDiffCblen(dataObj.cbDiffBlock.Length);
+            dataObj.gMHead.setDiffCrlen(dataObj.crDiffBlock.Length);
 
 
             // Save the motion vectors and the size of the array to gMHea
 
 
+            //* TESTING *//
+
+            byte[,] PLtemp = new byte[dataObj.paddedWidth, dataObj.paddedHeight];
+            byte[,] PCbtemp = new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+            byte[,] PCrtemp = new byte[dataObj.paddedWidth / 2, dataObj.paddedHeight / 2];
+
+            Bitmap test = new Bitmap(dataObj.mv1Head.getWidth(), dataObj.mv1Head.getHeight());
+
+            foreach(MotionVector mv in mvLArr)
+            {
+                for (int iii = 0; iii < 8; iii ++)
+                {
+                    for (int jjj = 0; jjj < 8; jjj ++)
+                    {
+                        PLtemp[iii + mv.x, jjj + mv.y] = Convert.ToByte(Math.Max(0, Math.Min(255, (dataObj.yData[iii + mv.u, jjj + mv.v] + dataObj.yDiffBlock[iii + mv.x, jjj + mv.y]))));
+                    }
+                }
+            }
+
+            //dataObj.CbData = Sampler.upsample(dataObj.CbData, ref dataObj);
+            //dataObj.CrData = Sampler.upsample(dataObj.CrData, ref dataObj);
+            //PCbtemp = Sampler.upsample(PCbtemp, ref dataObj);
+            //PCrtemp = Sampler.upsample(PCrtemp, ref dataObj);
+            //mvCbArr = Sampler.MVupsample(mvCbArr, ref dataObj);
+            //mvCrArr = Sampler.MVupsample(mvCrArr, ref dataObj);
+
+            foreach (MotionVector mv in mvCbArr)
+            {
+                for (int iii = 0; iii < 8; iii++)
+                {
+                    for (int jjj = 0; jjj < 8; jjj++)
+                    {
+                        PCbtemp[iii + mv.x, jjj + mv.y] = Convert.ToByte(Math.Max(0, Math.Min(255, (dataObj.CbData[iii + mv.u, jjj + mv.v] + dataObj.cbDiffBlock[iii + mv.x, jjj + mv.y]))));
+                    }
+                }
+            }
+
+            foreach (MotionVector mv in mvCrArr)
+            {
+                for (int iii = 0; iii < 8; iii++)
+                {
+                    for (int jjj = 0; jjj < 8; jjj++)
+                    {
+                        PCrtemp[iii + mv.x, jjj + mv.y] = Convert.ToByte(Math.Max(0, Math.Min(255, (dataObj.CrData[iii + mv.u, jjj + mv.v] + dataObj.crDiffBlock[iii + mv.x, jjj + mv.y]))));
+                    }
+                }
+            }
+
+            PCbtemp = Sampler.upsample(PCbtemp, ref dataObj);
+            PCrtemp = Sampler.upsample(PCrtemp, ref dataObj);
+
+            dataObj.setyData(PLtemp);
+            dataObj.setCbData(PCbtemp);
+            dataObj.setCrData(PCrtemp);
+
+            // upsample cb & cr after to then convert to RGB
+
+            dataChanger.YCbCrtoRGB(ref dataObj, dataObj.mv1Head);
+
+            test = dataObj.generateBitmap(dataObj.mv1Head);
+
+            //* TESTING *//
+
 
             // Set bitmap for picturebox3
-            pictureBox3.Image = bmp;
+            pictureBox3.Image = test;
         }
 
         /// <summary>
@@ -831,7 +928,7 @@ namespace Compression
             dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
             dataChanger.sYCbCrtoRGB(ref dataObj);
             dataChanger = new RGBChanger();
-            pictureBox2.Image = dataObj.generateBitmap();
+            pictureBox2.Image = dataObj.generateBitmap(dataObj.gHead);
         }
 
         /// <summary>
@@ -925,7 +1022,7 @@ namespace Compression
             dataObj.setdCrData(Sampler.upsample(dataObj.dCrData, ref dataObj));
             dataChanger.sYCbCrtoRGB(ref dataObj);
             dataChanger = new RGBChanger();
-            pb.Image = dataObj.generateBitmap();
+            pb.Image = dataObj.generateBitmap(dataObj.gHead);
         }
 
         /// <summary>
